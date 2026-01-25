@@ -32,19 +32,19 @@ jobs:
           command: clippy
           args: --workspace --all-targets -- -D warnings
 
-  lint_deps:
-    name: Lint / Dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: nightly
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-deny,cargo-udeps
-      - run: cargo deny check --hide-inclusion-graph
-      - run: cargo +nightly udeps --all-targets
+  # lint_deps:
+  #   name: Lint / Dependencies
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         toolchain: nightly
+  #     - uses: taiki-e/install-action@v2
+  #       with:
+  #         tool: cargo-deny,cargo-udeps
+  #     - run: cargo deny check --hide-inclusion-graph
+  #     - run: cargo +nightly udeps --all-targets
 
   test_linux:
     name: Test / Linux

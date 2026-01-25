@@ -41,16 +41,19 @@ And even if you power through this problem in your application - you'll face a *
 ## Solution
 Use one simple macro:
 ```rust
+/// Docstrings will appear in Markdown and JSON Schema outputs
 #[derive(setty::Config)]
 struct AppConfig {
-    /// Docstrings appear in Markdown and JSON Schema outputs
+    /// All fields are initialized using `Default::default`
     database: DatabaseConfig,
 
-    /// Everything is optional by default - required attributes are explicit
-    #[config(required, validate(min_length = 5))]
+    /// You can annotate fields that must be specified explicitly
+    #[config(required)]
+    /// Basic validation can be delegated to `serde_valid` crate
+    #[config(validate(min_length = 5))]
     username: String,
 
-    /// Default can be specified in-line and support full expressions
+    /// Default values can be specified in-line (support full expressions)
     #[config(default = "localhost")]
     hostname: String,
 

@@ -7,7 +7,6 @@ lint:
 	cargo fmt --check
 	cargo deny check --hide-inclusion-graph
 	cargo clippy --workspace --all-targets --all-features -- -D warnings
-	# cargo udeps --all-targets
 
 
 ###############################################################################
