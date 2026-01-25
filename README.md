@@ -1,4 +1,4 @@
-# setty - Opitionated Configuration
+# setty - opitionated application config
 `setty` is a facade over several configuration libraries providing **turn-key config system with sane defaults**.
 
 ## Problem
@@ -13,6 +13,7 @@ Also, you may need features beyond parsing:
 Layering more libraries and macros makes your models **very verbose**:
 
 ```rust
+#[serde_with::skip_serializing_none]
 #[derive(Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize, serde_valid::Validate, schemars::JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 struct AppConfig {

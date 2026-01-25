@@ -2,8 +2,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-//#[setty::config]
-#[derive(setty::Config)]
+#[derive(setty::Config, Default)]
 pub struct CLIConfig {
     /// Database configuration
     database: DatabaseConfig,

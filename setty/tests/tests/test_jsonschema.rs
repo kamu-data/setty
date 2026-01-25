@@ -1,6 +1,7 @@
+#![cfg(feature = "derive-jsonschema")]
+
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#[cfg(feature = "derive-jsonschema")]
 #[test]
 #[serial_test::serial]
 fn test_json_schema() {

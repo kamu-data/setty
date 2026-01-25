@@ -31,7 +31,7 @@ all = [
 derive-debug = ["setty-derive/derive-debug"]
 derive-eq = ["setty-derive/derive-eq"]
 derive-deserialize = ["setty-derive/derive-deserialize"]
-derive-serialize = ["setty-derive/derive-serialize"]
+derive-serialize = ["setty-derive/derive-serialize", "dep:serde_with"]
 derive-jsonschema = [
     "setty-derive/derive-jsonschema",
     "dep:serde_json",
@@ -54,6 +54,9 @@ serde = { version = "1", default-features = false, features = ["derive"] }
 schemars = { optional = true, version = "1", default-features = false }
 serde_norway = { optional = true, version = "0.9", default-features = false }
 serde_json = { optional = true, version = "1", features = ["preserve_order"] }
+serde_with = { optional = true, version = "3", default-features = false, features = [
+    "macros",
+] }
 
 
 [dev-dependencies]

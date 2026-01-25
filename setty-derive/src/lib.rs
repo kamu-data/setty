@@ -40,7 +40,7 @@ fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStream> {
     #[cfg(feature = "derive-deserialize")]
     {
         input.attrs.push(syn::parse_quote! {
-            #[derive(serde::Deserialize)]
+            #[derive(::serde::Deserialize)]
         });
         input.attrs.push(syn::parse_quote! {
             #[serde(deny_unknown_fields, rename_all = "camelCase")]
@@ -48,13 +48,18 @@ fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStream> {
     }
 
     #[cfg(feature = "derive-serialize")]
-    input.attrs.push(syn::parse_quote! {
-        #[derive(serde::Serialize)]
-    });
+    {
+        input.attrs.push(syn::parse_quote! {
+            #[::serde_with::skip_serializing_none]
+        });
+        input.attrs.push(syn::parse_quote! {
+            #[derive(::serde::Serialize)]
+        });
+    }
 
     #[cfg(feature = "derive-jsonschema")]
     input.attrs.push(syn::parse_quote! {
-        #[derive(schemars::JsonSchema)]
+        #[derive(::schemars::JsonSchema)]
     });
 
     match &mut input.data {
