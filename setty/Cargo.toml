@@ -58,6 +58,6 @@ serde_json = { optional = true, version = "1", features = ["preserve_order"] }
 
 [dev-dependencies]
 figment2 = { version = "0.11", default-features = false, features = ["test"] }
-indoc = "*"
-serial_test = "*"
+indoc = "2"
+serial_test = "3"
 pretty_assertions = { version = "1" }

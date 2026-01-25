@@ -5,8 +5,9 @@
 .PHONY: lint
 lint:
 	cargo fmt --check
-	# cargo udeps --all-targets
+	cargo deny check --hide-inclusion-graph
 	cargo clippy --workspace --all-targets --all-features -- -D warnings
+	# cargo udeps --all-targets
 
 
 ###############################################################################

@@ -1,0 +1,22 @@
+[bans]
+multiple-versions = "deny"
+
+# We should always specify version ranges
+wildcards = "deny"
+allow-wildcard-paths = true
+
+deny = []
+
+[licenses]
+allow = ["Apache-2.0", "MIT", "Unicode-3.0"]
+private = { ignore = true }
+
+
+[sources]
+unknown-git = "deny"
+unknown-registry = "deny"
+
+
+[advisories]
+yanked = "deny"
+ignore = []
