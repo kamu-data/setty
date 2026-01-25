@@ -29,5 +29,5 @@ derive-validate = []
 
 [dependencies]
 proc-macro2 = { version = "1", default-features = false }
-syn = { version = "2", default-features = false }
+syn = { version = "2" }
 quote = { version = "1", default-features = false }
