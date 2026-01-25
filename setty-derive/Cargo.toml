@@ -1,0 +1,33 @@
+[package]
+name = "setty-derive"
+description = "Proc macros crate of the `setty` library."
+categories = { workspace = true }
+version = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+authors = { workspace = true }
+readme = { workspace = true }
+license = { workspace = true }
+keywords = { workspace = true }
+include = { workspace = true }
+edition = { workspace = true }
+
+
+[lib]
+proc-macro = true
+
+
+[features]
+default = []
+derive-debug = []
+derive-eq = []
+derive-deserialize = []
+derive-serialize = []
+derive-jsonschema = []
+derive-validate = []
+
+
+[dependencies]
+proc-macro2 = { version = "1", default-features = false }
+syn = { version = "2", default-features = false }
+quote = { version = "1", default-features = false }

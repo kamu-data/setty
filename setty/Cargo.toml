@@ -1,0 +1,63 @@
+[package]
+name = "setty"
+description = "Opinionated configuration library."
+categories = { workspace = true }
+version = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+authors = { workspace = true }
+readme = { workspace = true }
+license = { workspace = true }
+keywords = { workspace = true }
+include = { workspace = true }
+edition = { workspace = true }
+
+
+[features]
+default = []
+
+all = [
+    "derive-debug",
+    "derive-eq",
+    "derive-deserialize",
+    "derive-serialize",
+    "derive-jsonschema",
+    "derive-validate",
+    "fmt-toml",
+    "fmt-json",
+    "fmt-yaml",
+]
+
+derive-debug = ["setty-derive/derive-debug"]
+derive-eq = ["setty-derive/derive-eq"]
+derive-deserialize = ["setty-derive/derive-deserialize"]
+derive-serialize = ["setty-derive/derive-serialize"]
+derive-jsonschema = [
+    "setty-derive/derive-jsonschema",
+    "dep:serde_json",
+    "dep:schemars",
+    "schemars/derive",
+]
+derive-validate = ["setty-derive/derive-validate"]
+
+fmt-toml = ["figment2/toml"]
+fmt-json = ["figment2/json"]
+fmt-yaml = ["figment2/yaml"]
+
+
+[dependencies]
+setty-derive = { workspace = true }
+
+figment2 = { version = "0.11", default-features = false, features = [] }
+serde = { version = "1", default-features = false, features = ["derive"] }
+
+schemars = { optional = true, version = "1", default-features = false }
+serde_norway = { optional = true, version = "0.9", default-features = false }
+serde_json = { optional = true, version = "1", features = ["preserve_order"] }
+
+
+[dev-dependencies]
+figment2 = { version = "0.11", default-features = false, features = ["test"] }
+indoc = "*"
+serial_test = "*"
+pretty_assertions = { version = "1" }

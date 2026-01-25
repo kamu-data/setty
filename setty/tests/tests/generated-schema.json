@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CLIConfig",
+  "type": "object",
+  "properties": {
+    "database": {
+      "description": "Database configuration",
+      "$ref": "#/$defs/DatabaseConfig",
+      "default": {
+        "kind": "sqlite",
+        "databasePath": ".kamu/db.sqlite"
+      }
+    },
+    "encryption": {
+      "description": "Optional encryption",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EncryptionConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "DatabaseConfig": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "databasePath": {
+              "description": "Path to the database file",
+              "type": "string",
+              "default": ""
+            },
+            "kind": {
+              "type": "string",
+              "const": "sqlite"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schemaName": {
+              "description": "Name of the schema",
+              "type": "string",
+              "default": ""
+            },
+            "host": {
+              "description": "Host name",
+              "type": "string",
+              "default": "localhost"
+            },
+            "kind": {
+              "type": "string",
+              "const": "postgres"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "EncryptionConfig": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "description": "Encryption key",
+          "type": "string"
+        },
+        "algo": {
+          "description": "Encryption algorythm",
+          "$ref": "#/$defs/EncryptionAlgo",
+          "default": "aes"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "key"
+      ]
+    },
+    "EncryptionAlgo": {
+      "type": "string",
+      "enum": [
+        "aes",
+        "rsa"
+      ]
+    }
+  }
+}
