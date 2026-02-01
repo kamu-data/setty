@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
@@ -70,13 +72,13 @@ pub fn derive(attr: TokenStream, item: TokenStream) -> TokenStream {
                 return false;
             }
 
-            #[cfg(feature = "derive-eq")]
-            if path_matches(p, "std::cmp::Eq") {
+            #[cfg(feature = "derive-partial-eq")]
+            if path_matches(p, "std::cmp::PartialEq") {
                 return false;
             }
 
             #[cfg(feature = "derive-eq")]
-            if path_matches(p, "std::cmp::PartialEq") {
+            if path_matches(p, "std::cmp::Eq") {
                 return false;
             }
         }
@@ -85,7 +87,7 @@ pub fn derive(attr: TokenStream, item: TokenStream) -> TokenStream {
     });
 
     TokenStream::from(quote! {
-        #[derive(#(#derives,)*)]
+        #[::std::prelude::v1::derive(#(#derives,)*)]
         #item
     })
 }
@@ -116,11 +118,11 @@ fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStream> {
     #[cfg(feature = "derive-debug")]
     add_derive(&mut input.attrs, syn::parse_quote!(Debug));
 
+    #[cfg(feature = "derive-partial-eq")]
+    add_derive(&mut input.attrs, syn::parse_quote!(PartialEq));
+
     #[cfg(feature = "derive-eq")]
-    {
-        add_derive(&mut input.attrs, syn::parse_quote!(PartialEq));
-        add_derive(&mut input.attrs, syn::parse_quote!(Eq));
-    }
+    add_derive(&mut input.attrs, syn::parse_quote!(Eq));
 
     #[cfg(feature = "derive-deserialize")]
     {
@@ -515,7 +517,6 @@ fn path_matches(p: &syn::Path, other: &str) -> bool {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#[allow(unused)]
 fn fields_case() -> Option<&'static str> {
     let case: Option<&'static str> = None;
 
@@ -540,7 +541,6 @@ fn fields_case() -> Option<&'static str> {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#[allow(unused)]
 fn variants_case() -> Option<&'static str> {
     let case: Option<&'static str> = None;
 

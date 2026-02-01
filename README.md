@@ -72,6 +72,7 @@ setty = {
         # These traits will be derived for all types
         "derive-clone",
         "derive-debug",
+        "derive-partial-eq",
         "derive-eq",
         "derive-deserialize",
         "derive-serialize",

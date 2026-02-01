@@ -18,6 +18,7 @@ default = []
 
 derive-clone = ["setty-derive/derive-clone"]
 derive-debug = ["setty-derive/derive-debug"]
+derive-partial-eq = ["setty-derive/derive-partial-eq"]
 derive-eq = ["setty-derive/derive-eq"]
 derive-deserialize = ["setty-derive/derive-deserialize"]
 derive-serialize = ["setty-derive/derive-serialize", "dep:serde_with"]
