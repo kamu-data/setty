@@ -16,18 +16,7 @@ edition = { workspace = true }
 [features]
 default = []
 
-all = [
-    "derive-debug",
-    "derive-eq",
-    "derive-deserialize",
-    "derive-serialize",
-    "derive-jsonschema",
-    "derive-validate",
-    "fmt-toml",
-    "fmt-json",
-    "fmt-yaml",
-]
-
+derive-clone = ["setty-derive/derive-clone"]
 derive-debug = ["setty-derive/derive-debug"]
 derive-eq = ["setty-derive/derive-eq"]
 derive-deserialize = ["setty-derive/derive-deserialize"]
@@ -40,9 +29,32 @@ derive-jsonschema = [
 ]
 derive-validate = ["setty-derive/derive-validate"]
 
+case-fields-lower = ["setty-derive/case-fields-lower"]
+case-fields-pascal = ["setty-derive/case-fields-pascal"]
+case-fields-camel = ["setty-derive/case-fields-camel"]
+case-fields-snake = ["setty-derive/case-fields-snake"]
+case-fields-kebab = ["setty-derive/case-fields-kebab"]
+
+case-enums-lower = ["setty-derive/case-enums-lower"]
+case-enums-pascal = ["setty-derive/case-enums-pascal"]
+case-enums-camel = ["setty-derive/case-enums-camel"]
+case-enums-snake = ["setty-derive/case-enums-snake"]
+case-enums-kebab = ["setty-derive/case-enums-kebab"]
+case-enums-any = ["setty-derive/case-enums-any"]
+
 fmt-toml = ["figment2/toml"]
-fmt-json = ["figment2/json"]
-fmt-yaml = ["figment2/yaml"]
+fmt-json = ["figment2/json", "dep:serde_json"]
+fmt-yaml = ["figment2/yaml", "dep:serde_yaml"]
+
+type-bigdecimal04 = ["schemars/bigdecimal04"]
+type-chrono04 = ["schemars/chrono04"]
+type-duration-string05 = ["dep:duration-string"]
+type-url2 = ["schemars/url2"]
+
+gen-jsonschema = ["derive-jsonschema"]
+gen-markdown = ["derive-jsonschema"]
+
+test = ["figment2/test"]
 
 
 [dependencies]
@@ -50,13 +62,18 @@ setty-derive = { workspace = true }
 
 figment2 = { version = "0.11", default-features = false, features = [] }
 serde = { version = "1", default-features = false, features = ["derive"] }
+thiserror = { version = "2", default-features = false }
 
+# Optional
+duration-string = { optional = true, version = "0.5", default-features = false, features = [
+    "serde",
+] }
 schemars = { optional = true, version = "1", default-features = false }
-serde_norway = { optional = true, version = "0.9", default-features = false }
 serde_json = { optional = true, version = "1", features = ["preserve_order"] }
 serde_with = { optional = true, version = "3", default-features = false, features = [
     "macros",
 ] }
+serde_yaml = { optional = true, package = "serde_norway", version = "0.9", default-features = false }
 
 
 [dev-dependencies]

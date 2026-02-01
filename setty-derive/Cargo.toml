@@ -19,12 +19,28 @@ proc-macro = true
 
 [features]
 default = []
+
+derive-clone = []
 derive-debug = []
 derive-eq = []
 derive-deserialize = []
 derive-serialize = []
 derive-jsonschema = []
 derive-validate = []
+
+case-fields-lower = []
+case-fields-pascal = []
+case-fields-camel = []
+case-fields-snake = []
+case-fields-kebab = []
+
+
+case-enums-lower = []
+case-enums-pascal = []
+case-enums-camel = []
+case-enums-snake = []
+case-enums-kebab = []
+case-enums-any = []
 
 
 [dependencies]

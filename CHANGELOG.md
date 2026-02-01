@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Applying `#[serde_with::skip_serializing_none]`
-### Fixed
 - Macro hygiene
+- Proc `derive` macro for deduplication of explicit derives (e.g. `#[derive(setty::Config, serde::Serialize)`)
+- Parsing facade
+- JSON Schema output
+- Markdown output
+- Path completions
+- Print out (with / without defaults)
+- Case variations for struct fields and enum variants
+- Extended types support (`chrono`, `bigdecimal`, `duration-string`)
 
 ## [0.1.0] - 2026-01-24
 ### Added

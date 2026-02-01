@@ -2,45 +2,41 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#[derive(setty::Config, Default)]
-pub struct CLIConfig {
+#[derive(setty::Config, setty::Default)]
+pub struct MyConfig {
     /// Database configuration
-    database: DatabaseConfig,
+    pub database: DatabaseConfig,
 
     /// Optional encryption
-    encryption: Option<EncryptionConfig>,
+    pub encryption: Option<EncryptionConfig>,
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#[derive(setty::Config)]
+#[derive(setty::Config, setty::Default)]
 pub enum DatabaseConfig {
+    #[default]
     Sqlite(SqliteDatabaseConfig),
     Postgres(PostgresDatabaseConfig),
 }
 
-impl Default for DatabaseConfig {
-    fn default() -> Self {
-        Self::Sqlite(SqliteDatabaseConfig {
-            database_path: ".kamu/db.sqlite".into(),
-        })
-    }
-}
-
-#[derive(setty::Config)]
+/// Sqlite driver
+#[derive(setty::Config, setty::Default)]
 pub struct SqliteDatabaseConfig {
     /// Path to the database file
-    database_path: String,
+    #[config(default = ".kamu/db.sqlite")]
+    pub database_path: String,
 }
 
+/// Postgres driver
 #[derive(setty::Config)]
 pub struct PostgresDatabaseConfig {
     /// Name of the schema
-    schema_name: String,
+    pub schema_name: String,
 
     /// Host name
     #[config(default = "localhost")]
-    host: String,
+    pub host: String,
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -49,10 +45,10 @@ pub struct PostgresDatabaseConfig {
 pub struct EncryptionConfig {
     /// Encryption key
     #[config(required)]
-    key: String,
+    pub key: String,
 
     /// Encryption algorythm
-    algo: EncryptionAlgo,
+    pub algo: EncryptionAlgo,
 }
 
 #[derive(Default, setty::Config)]
@@ -77,12 +73,12 @@ fn get_config_figment() -> figment2::Figment {
 #[test]
 #[serial_test::serial]
 fn test_defaults() {
-    figment2::Jail::expect_with(|_| {
-        let cfg: CLIConfig = get_config_figment().extract()?;
+    setty::test::Jail::expect_with(|_| {
+        let cfg: MyConfig = get_config_figment().extract()?;
 
         assert_eq!(
             cfg,
-            CLIConfig {
+            MyConfig {
                 database: DatabaseConfig::default(),
                 encryption: None,
             }
@@ -96,15 +92,15 @@ fn test_defaults() {
 #[test]
 #[serial_test::serial]
 fn test_empty_config() {
-    figment2::Jail::expect_with(|j| {
+    setty::test::Jail::expect_with(|j| {
         j.create_dir(".kamu")?;
         j.create_file(".kamu/config.yaml", r#""#)?;
 
-        let cfg: CLIConfig = get_config_figment().extract()?;
+        let cfg: MyConfig = get_config_figment().extract()?;
 
         assert_eq!(
             cfg,
-            CLIConfig {
+            MyConfig {
                 database: DatabaseConfig::default(),
                 encryption: None,
             }
@@ -118,24 +114,24 @@ fn test_empty_config() {
 #[test]
 #[serial_test::serial]
 fn test_one_config() {
-    figment2::Jail::expect_with(|j| {
+    setty::test::Jail::expect_with(|j| {
         j.create_dir(".kamu")?;
         j.create_file(
             ".kamu/config.yaml",
             indoc::indoc!(
                 r#"
                 database:
-                    kind: postgres
-                    schemaName: foo
+                    kind: Postgres
+                    schema_name: foo
                 "#
             ),
         )?;
 
-        let cfg: CLIConfig = get_config_figment().extract()?;
+        let cfg: MyConfig = get_config_figment().extract()?;
 
         assert_eq!(
             cfg,
-            CLIConfig {
+            MyConfig {
                 database: DatabaseConfig::Postgres(PostgresDatabaseConfig {
                     schema_name: "foo".into(),
                     host: "localhost".into(),
@@ -152,15 +148,16 @@ fn test_one_config() {
 #[test]
 #[serial_test::serial]
 fn test_env_var_override_nested() {
-    figment2::Jail::expect_with(|j| {
+    setty::test::Jail::expect_with(|j| {
+        // Note: Lowercase `postgres` works because of `case-enums-any` feature
         j.set_env("KAMU_CFG_database__kind", "postgres");
-        j.set_env("KAMU_CFG_database__schemaName", "bar");
+        j.set_env("KAMU_CFG_database__schema_name", "bar");
 
-        let cfg: CLIConfig = get_config_figment().extract()?;
+        let cfg: MyConfig = get_config_figment().extract()?;
 
         assert_eq!(
             cfg,
-            CLIConfig {
+            MyConfig {
                 database: DatabaseConfig::Postgres(PostgresDatabaseConfig {
                     schema_name: "bar".into(),
                     host: "localhost".into(),
@@ -177,26 +174,26 @@ fn test_env_var_override_nested() {
 #[test]
 #[serial_test::serial]
 fn test_unrecognized_field_rejected() {
-    figment2::Jail::expect_with(|j| {
+    setty::test::Jail::expect_with(|j| {
         j.create_dir(".kamu")?;
         j.create_file(
             ".kamu/config.yaml",
             indoc::indoc!(
                 r#"
                 database:
-                    kind: postgres
-                    schemaNamez: foo
+                    kind: Postgres
+                    schema_namez: foo
                 "#
             ),
         )?;
 
         let err = get_config_figment()
-            .extract::<CLIConfig>()
+            .extract::<MyConfig>()
             .expect_err("Expected error");
 
         assert_eq!(
             err.kind,
-            figment2::error::Kind::UnknownField("schemaNamez".into(), &["schemaName", "host"])
+            figment2::error::Kind::UnknownField("schema_namez".into(), &["schema_name", "host"])
         );
         assert_eq!(err.path, ["database"]);
         Ok(())
@@ -209,20 +206,20 @@ fn test_unrecognized_field_rejected() {
 #[serial_test::serial]
 fn test_required_field() {
     // Required field missing
-    figment2::Jail::expect_with(|j| {
+    setty::test::Jail::expect_with(|j| {
         j.create_dir(".kamu")?;
         j.create_file(
             ".kamu/config.yaml",
             indoc::indoc!(
                 r#"
                 encryption:
-                    algo: rsa
+                    algo: Rsa
                 "#
             ),
         )?;
 
         let err = get_config_figment()
-            .extract::<CLIConfig>()
+            .extract::<MyConfig>()
             .expect_err("Expected error");
 
         assert_eq!(err.kind, figment2::error::Kind::MissingField("key".into()));
@@ -232,7 +229,7 @@ fn test_required_field() {
     });
 
     // Required field present
-    figment2::Jail::expect_with(|j| {
+    setty::test::Jail::expect_with(|j| {
         j.create_dir(".kamu")?;
         j.create_file(
             ".kamu/config.yaml",
@@ -240,16 +237,16 @@ fn test_required_field() {
                 r#"
                 encryption:
                     key: secret
-                    algo: rsa
+                    algo: Rsa
                 "#
             ),
         )?;
 
-        let cfg: CLIConfig = get_config_figment().extract()?;
+        let cfg: MyConfig = get_config_figment().extract()?;
 
         assert_eq!(
             cfg,
-            CLIConfig {
+            MyConfig {
                 database: DatabaseConfig::default(),
                 encryption: Some(EncryptionConfig {
                     key: "secret".into(),
@@ -259,6 +256,48 @@ fn test_required_field() {
         );
         Ok(())
     });
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#[test]
+fn test_default() {
+    #[derive(setty::Config, setty::Default)]
+    struct Config {
+        #[config(default = 42)]
+        foo: u32,
+
+        #[config(default_parse = "42")]
+        bar: u32,
+
+        baz: Baz,
+    }
+
+    #[derive(setty::Config, setty::Default)]
+    enum Baz {
+        X,
+        #[default]
+        Y,
+    }
+
+    assert_eq!(
+        Config::default(),
+        Config {
+            foo: 42,
+            bar: 42,
+            baz: Baz::Y
+        }
+    );
+
+    let cfg: Config = figment2::Figment::new().extract().unwrap();
+    assert_eq!(
+        cfg,
+        Config {
+            foo: 42,
+            bar: 42,
+            baz: Baz::Y
+        }
+    );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

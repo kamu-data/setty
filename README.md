@@ -59,7 +59,7 @@ struct AppConfig {
     hostname: String,
 
     /// Use of deptecated values can be reported as warnings or fail strict validation
-    #[config(deprecated = "Avoid specifying password in config file")]
+    #[deprecated = "Avoid specifying password in config file"]
     password: Option<String>
 }
 ```
@@ -69,15 +69,34 @@ Control what behavior you need via create features:
 setty = { 
     version = "*", 
     features = [
+        # These traits will be derived for all types
+        "derive-clone",
         "derive-debug",
         "derive-eq",
         "derive-deserialize",
         "derive-serialize",
         "derive-jsonschema",
         "derive-validate",
+        # Pick a case for struct fields (applies `#[serde(renameAll = "...")]`)
+        "case-fields-lower",
+        "case-fields-pascal",
+        "case-fields-camel",
+        "case-fields-snake",
+        "case-fields-kebab",
+        # Pick a case for enum variants (applies `#[serde(renameAll = "...")]`)
+        "case-enums-lower",
+        "case-enums-pascal",
+        "case-enums-camel",
+        "case-enums-snake",
+        "case-enums-kebab",
+        "case-enums-any", # Uses one of other cases on write but accepts any on read
+        # Pick input format(s)
         "fmt-toml",
         "fmt-json",
         "fmt-yaml",
+        # Pick generation target formats
+        "gen-jsonschema",
+        "gen-markdown",
     ]
 }
 ```
@@ -86,3 +105,20 @@ By specifying features **only** at the top-level application crate - the desired
 
 ## Alternatives
 - Rolling your own declarative macros (see example in [`datafusion`](https://github.com/apache/datafusion/blob/b463a9f9e3c9603eb2db7113125fea3a1b7f5455/datafusion/common/src/config.rs#L2480))
+
+
+## Proc Macros
+* `derive` - a replacement for standard `#[derive(...)]` macro that will de-duplicate derivations - this is most useful for e.g. `#[setty::derive(setty::Config, Clone)]` which allows type to implement `Clone` even when top-level feature `derive-clone` is disable, and not hit duplicate trait impl error when feature is enabled.
+
+## Derive Macros
+* `Config` - main workhorse
+* `Debug` - same as `std::Debug` but recognizes defaults provided via `#[config(default = $expr)]` attributes
+
+## Field Attributes
+These arguments can be specified in `#[config(...)]` field attribute:
+* `required` - The field must be present in config
+* `default = $expr` - Specifies expression used to initialize the value when it's not present in config
+* `default_parse = $str` - Shorthand for`default = "$str".parse().unwrap()`
+
+## Interaction with other attributes
+* `#[serde(...)]` attribute will be propagated and can be used to override default behaviour (e.g. `#[serde(tag = "type")]`)

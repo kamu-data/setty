@@ -4,12 +4,11 @@
 
 #[test]
 #[serial_test::serial]
-fn test_json_schema() {
+fn test_markdown() {
     use super::test_deserialize::MyConfig;
 
-    let schema = setty::Config::<MyConfig, setty::format::Json>::new().json_schema();
-    let schema = serde_json::to_string_pretty(&schema).unwrap();
-    std::fs::write("tests/tests/gen/jsonschema.json", schema).unwrap();
+    let md = setty::Config::<MyConfig, setty::format::Json>::new().markdown();
+    std::fs::write("tests/tests/gen/markdown.md", md).unwrap();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
