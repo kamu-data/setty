@@ -342,7 +342,7 @@ fn test_serde_rename_enum() {
     enum B {
         Foo(C),
 
-        #[serde(rename = "Baz")]
+        #[serde(rename = "Baz", alias = "Foobar")]
         Bar(C),
     }
 
@@ -355,6 +355,19 @@ fn test_serde_rename_enum() {
             r#"
             b:
                 type: baz
+            "#,
+        )
+        .extract()
+        .unwrap();
+
+    assert_eq!(cfg, A { b: B::Bar(C {}) });
+
+    // Setty will generate case permutations for alias as well
+    let cfg: A = setty::Config::new()
+        .with_source_str::<setty::format::Yaml>(
+            r#"
+            b:
+                type: foobar
             "#,
         )
         .extract()

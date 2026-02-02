@@ -241,8 +241,10 @@ fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStream> {
                     let serde_variant = SerdeFieldOpts::parse(&variant.attrs)?;
 
                     let name = serde_variant.rename.unwrap_or(variant.ident.to_string());
+                    let mut names = serde_variant.alias.clone();
+                    names.push(name.clone());
 
-                    let mut aliases = case_permutations(&name);
+                    let mut aliases = case_permutations(&names);
                     aliases.remove(&name);
 
                     for alias in aliases {
@@ -468,6 +470,7 @@ impl ConfigFieldOpts {
 
 struct SerdeTypeOpts {
     tag: Option<String>,
+
     span: Span,
 }
 
@@ -486,7 +489,7 @@ impl SerdeTypeOpts {
         Ok(())
     }
 
-    fn parse(attrs: &Vec<syn::Attribute>) -> syn::Result<Self> {
+    fn parse(attrs: &[syn::Attribute]) -> syn::Result<Self> {
         let mut opts = Self::new(proc_macro2::Span::call_site());
 
         for attr in attrs.iter() {
@@ -506,6 +509,8 @@ impl SerdeTypeOpts {
             if meta.path.is_ident("tag") {
                 let value: syn::LitStr = meta.value()?.parse()?;
                 opts.tag = Some(value.value());
+            } else {
+                let _ = meta.value()?.parse::<syn::Expr>()?;
             }
             Ok(())
         })?;
@@ -518,25 +523,32 @@ impl SerdeTypeOpts {
 
 struct SerdeFieldOpts {
     rename: Option<String>,
+    alias: Vec<String>,
     span: Span,
 }
 
 impl SerdeFieldOpts {
     fn new(span: Span) -> Self {
-        Self { rename: None, span }
+        Self {
+            rename: None,
+            alias: Vec::new(),
+            span,
+        }
     }
 
-    fn merge(&mut self, other: Self) -> syn::Result<()> {
+    fn merge(&mut self, mut other: Self) -> syn::Result<()> {
         self.span = other.span;
 
         if other.rename.is_some() {
             self.rename = other.rename;
         }
 
+        self.alias.append(&mut other.alias);
+
         Ok(())
     }
 
-    fn parse(attrs: &Vec<syn::Attribute>) -> syn::Result<Self> {
+    fn parse(attrs: &[syn::Attribute]) -> syn::Result<Self> {
         let mut opts = Self::new(proc_macro2::Span::call_site());
 
         for attr in attrs.iter() {
@@ -556,6 +568,11 @@ impl SerdeFieldOpts {
             if meta.path.is_ident("rename") {
                 let value: syn::LitStr = meta.value()?.parse()?;
                 opts.rename = Some(value.value());
+            } else if meta.path.is_ident("alias") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                opts.alias.push(value.value());
+            } else {
+                let _ = meta.value()?.parse::<syn::Expr>()?;
             }
             Ok(())
         })?;
@@ -627,13 +644,14 @@ fn variants_case() -> Option<&'static str> {
     case
 }
 
-fn case_permutations(name: &str) -> std::collections::BTreeSet<String> {
+fn case_permutations(names: &[String]) -> std::collections::BTreeSet<String> {
     let mut ret = std::collections::BTreeSet::new();
 
-    ret.insert(name.to_owned());
-    ret.insert(name.to_lowercase());
-
-    ret.insert(pascal_to_camel(name));
+    for name in names {
+        ret.insert(name.to_owned());
+        ret.insert(name.to_lowercase());
+        ret.insert(pascal_to_camel(name));
+    }
 
     ret
 }
