@@ -30,17 +30,9 @@ Postgres driver
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `schema_name` | `string` |  | Name of the schema |
 | `host` | `string` |  | Host name |
 | `kind` | `string` | `V` |  |
-
-
-## `EncryptionConfig`
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `key` | `string` | `V` | Encryption key |
-| `algo` | [`EncryptionAlgo`](#encryptionalgo) |  | Encryption algorythm |
+| `schema_name` | `string` |  | Name of the schema |
 
 
 ## `EncryptionAlgo`
@@ -49,3 +41,11 @@ Postgres driver
 |---|
 | `Aes` |
 | `Rsa` |
+
+
+## `EncryptionConfig`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `algo` | [`EncryptionAlgo`](#encryptionalgo) |  | Encryption algorythm |
+| `key` | `string` | `V` | Encryption key |

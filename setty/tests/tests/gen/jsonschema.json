@@ -7,8 +7,8 @@
       "description": "Database configuration",
       "$ref": "#/$defs/DatabaseConfig",
       "default": {
-        "kind": "Sqlite",
-        "database_path": ".kamu/db.sqlite"
+        "database_path": ".kamu/db.sqlite",
+        "kind": "Sqlite"
       }
     },
     "encryption": {
@@ -50,11 +50,6 @@
           "description": "Postgres driver",
           "type": "object",
           "properties": {
-            "schema_name": {
-              "description": "Name of the schema",
-              "type": "string",
-              "default": ""
-            },
             "host": {
               "description": "Host name",
               "type": "string",
@@ -63,6 +58,11 @@
             "kind": {
               "type": "string",
               "const": "Postgres"
+            },
+            "schema_name": {
+              "description": "Name of the schema",
+              "type": "string",
+              "default": ""
             }
           },
           "additionalProperties": false,
@@ -72,29 +72,29 @@
         }
       ]
     },
-    "EncryptionConfig": {
-      "type": "object",
-      "properties": {
-        "key": {
-          "description": "Encryption key",
-          "type": "string"
-        },
-        "algo": {
-          "description": "Encryption algorythm",
-          "$ref": "#/$defs/EncryptionAlgo",
-          "default": "Aes"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "key"
-      ]
-    },
     "EncryptionAlgo": {
       "type": "string",
       "enum": [
         "Aes",
         "Rsa"
+      ]
+    },
+    "EncryptionConfig": {
+      "type": "object",
+      "properties": {
+        "algo": {
+          "description": "Encryption algorythm",
+          "$ref": "#/$defs/EncryptionAlgo",
+          "default": "Aes"
+        },
+        "key": {
+          "description": "Encryption key",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "key"
       ]
     }
   }

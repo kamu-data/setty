@@ -102,15 +102,18 @@ fn test_config_ops() {
         );
 
         // Complete path
+        let mut completions = fig.complete_path("data");
+        completions.sort();
+
         pretty_assertions::assert_eq!(
-            fig.complete_path("data"),
+            completions,
             [
                 "database",
                 "database.database_path",
-                "database.kind",
-                "database.schema_name",
                 "database.host",
                 "database.kind",
+                "database.kind",
+                "database.schema_name",
             ]
         );
 
