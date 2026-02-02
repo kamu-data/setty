@@ -2,7 +2,7 @@
 
 use proc_macro::TokenStream;
 use proc_macro2::Span;
-use quote::quote;
+use quote::{ToTokens, quote};
 use syn::spanned::Spanned;
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -105,6 +105,8 @@ fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStream> {
     let mut default_functions: Vec<proc_macro2::TokenStream> = Vec::new();
 
     let mut item_attrs_overrides = input.attrs;
+
+    let serde_type = SerdeTypeOpts::parse(&item_attrs_overrides)?;
 
     input.attrs = Vec::new();
 
@@ -224,17 +226,10 @@ fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStream> {
                 .all(|v| matches!(v.fields, syn::Fields::Unit));
 
             #[cfg(any(feature = "derive-deserialize", feature = "derive-serialize"))]
-            if !unit_enum {
-                let serde =
-                    if let Some(overrides) = extract_serde_overrides(&mut item_attrs_overrides) {
-                        overrides
-                    } else {
-                        syn::parse_quote! {
-                            #[serde(tag = "kind")]
-                        }
-                    };
-
-                input.attrs.push(serde);
+            if !unit_enum && serde_type.tag.is_none() {
+                input.attrs.push(syn::parse_quote! {
+                    #[serde(tag = "kind")]
+                });
             }
 
             #[cfg(all(
@@ -243,8 +238,13 @@ fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStream> {
             ))]
             {
                 for variant in &mut item.variants {
-                    let name = variant.ident.to_string();
-                    let aliases = case_permutations(&name);
+                    let serde_variant = SerdeFieldOpts::parse(&variant.attrs)?;
+
+                    let name = serde_variant.rename.unwrap_or(variant.ident.to_string());
+
+                    let mut aliases = case_permutations(&name);
+                    aliases.remove(&name);
+
                     for alias in aliases {
                         variant.attrs.push(syn::parse_quote! {
                             #[serde(alias = #alias)]
@@ -442,39 +442,21 @@ impl ConfigFieldOpts {
     fn parse_from(attr: &syn::Attribute) -> syn::Result<Self> {
         let mut opts = Self::new(attr.span());
 
-        attr.parse_args_with(|input: syn::parse::ParseStream| {
-            while !input.is_empty() {
-                let ident: syn::Ident = input.parse()?;
-
-                match ident.to_string().as_str() {
-                    "required" => {
-                        opts.required = Some(true);
-                    }
-
-                    "default" => {
-                        input.parse::<syn::Token![=]>()?;
-                        let expr: syn::Expr = input.parse()?;
-                        opts.default = Some(expr);
-                    }
-
-                    "default_parse" => {
-                        input.parse::<syn::Token![=]>()?;
-                        let lit: syn::LitStr = input.parse()?;
-                        opts.default_parse = Some(lit);
-                    }
-
-                    _ => {
-                        return Err(syn::Error::new(
-                            attr.span(),
-                            format!("unknown config option `{}`", ident),
-                        ));
-                    }
-                }
-
-                // Optional trailing comma
-                let _ = input.parse::<syn::Token![,]>();
+        attr.parse_nested_meta(|meta| {
+            if meta.path.is_ident("required") {
+                opts.required = Some(true);
+            } else if meta.path.is_ident("default") {
+                let value: syn::Expr = meta.value()?.parse()?;
+                opts.default = Some(value);
+            } else if meta.path.is_ident("default_parse") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                opts.default_parse = Some(value);
+            } else {
+                return Err(syn::Error::new(
+                    meta.path.span(),
+                    format!("unknown config option `{}`", meta.path.to_token_stream()),
+                ));
             }
-
             Ok(())
         })?;
 
@@ -484,20 +466,102 @@ impl ConfigFieldOpts {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-fn extract_serde_overrides(attrs: &mut Vec<syn::Attribute>) -> Option<syn::Attribute> {
-    let mut ret = None;
+struct SerdeTypeOpts {
+    tag: Option<String>,
+    span: Span,
+}
 
-    for attr in attrs.iter() {
-        if attr.path().is_ident("serde") {
-            ret = Some(attr.clone());
+impl SerdeTypeOpts {
+    fn new(span: Span) -> Self {
+        Self { tag: None, span }
+    }
+
+    fn merge(&mut self, other: Self) -> syn::Result<()> {
+        self.span = other.span;
+
+        if other.tag.is_some() {
+            self.tag = other.tag;
         }
+
+        Ok(())
     }
 
-    if ret.is_some() {
-        attrs.retain(|a| !a.path().is_ident("serde"));
+    fn parse(attrs: &Vec<syn::Attribute>) -> syn::Result<Self> {
+        let mut opts = Self::new(proc_macro2::Span::call_site());
+
+        for attr in attrs.iter() {
+            if attr.path().is_ident("serde") {
+                let more_opts = Self::parse_from(attr)?;
+                opts.merge(more_opts)?;
+            }
+        }
+
+        Ok(opts)
     }
 
-    ret
+    fn parse_from(attr: &syn::Attribute) -> syn::Result<Self> {
+        let mut opts = Self::new(attr.span());
+
+        attr.parse_nested_meta(|meta| {
+            if meta.path.is_ident("tag") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                opts.tag = Some(value.value());
+            }
+            Ok(())
+        })?;
+
+        Ok(opts)
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+struct SerdeFieldOpts {
+    rename: Option<String>,
+    span: Span,
+}
+
+impl SerdeFieldOpts {
+    fn new(span: Span) -> Self {
+        Self { rename: None, span }
+    }
+
+    fn merge(&mut self, other: Self) -> syn::Result<()> {
+        self.span = other.span;
+
+        if other.rename.is_some() {
+            self.rename = other.rename;
+        }
+
+        Ok(())
+    }
+
+    fn parse(attrs: &Vec<syn::Attribute>) -> syn::Result<Self> {
+        let mut opts = Self::new(proc_macro2::Span::call_site());
+
+        for attr in attrs.iter() {
+            if attr.path().is_ident("serde") {
+                let more_opts = Self::parse_from(attr)?;
+                opts.merge(more_opts)?;
+            }
+        }
+
+        Ok(opts)
+    }
+
+    fn parse_from(attr: &syn::Attribute) -> syn::Result<Self> {
+        let mut opts = Self::new(attr.span());
+
+        attr.parse_nested_meta(|meta| {
+            if meta.path.is_ident("rename") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                opts.rename = Some(value.value());
+            }
+            Ok(())
+        })?;
+
+        Ok(opts)
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

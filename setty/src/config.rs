@@ -1,9 +1,6 @@
 #![allow(unused)]
 
-use std::{
-    marker::PhantomData,
-    path::{Path, PathBuf},
-};
+use std::{marker::PhantomData, path::Path};
 
 use figment2::Provider as _;
 
@@ -11,66 +8,85 @@ use crate::{Value, format::Format};
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug)]
-pub struct Config<Cfg, Fmt> {
-    paths: Vec<PathBuf>,
-    env_var_prefix: Option<String>,
+pub struct Config<Cfg> {
+    fig: figment2::Figment,
     _t_cfg: PhantomData<Cfg>,
-    _t_prov: PhantomData<Fmt>,
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-impl<Cfg, Fmt> Default for Config<Cfg, Fmt> {
+impl<Cfg> Default for Config<Cfg> {
     fn default() -> Self {
         Self {
-            paths: Vec::new(),
-            env_var_prefix: None,
+            fig: figment2::Figment::new(),
             _t_cfg: PhantomData,
-            _t_prov: PhantomData,
         }
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#[cfg(all(feature = "derive-deserialize", feature = "derive-serialize"))]
-impl<Cfg, Fmt> Config<Cfg, Fmt>
+#[cfg(feature = "derive-deserialize")]
+impl<Cfg> Config<Cfg>
 where
-    Cfg: Default,
     Cfg: serde::Deserialize<'static>,
-    Cfg: serde::Serialize,
-    Fmt: Format,
-    Fmt: figment2::providers::Format,
 {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn with_path(mut self, path: impl Into<PathBuf>) -> Self {
-        self.paths.push(path.into());
+    /// Escape hatch to get raw figment
+    pub fn into_figment(self) -> figment2::Figment {
+        self.fig
+    }
+
+    pub fn with_source_str<Fmt>(mut self, data: impl AsRef<str>) -> Self
+    where
+        Fmt: Format,
+        Fmt: figment2::providers::Format,
+    {
+        self.fig = self
+            .fig
+            .admerge(Fmt::string(data.as_ref()).search(false).required(true));
         self
     }
 
-    pub fn with_paths<I, P>(mut self, paths: I) -> Self
+    pub fn with_source_file<Fmt>(mut self, path: impl AsRef<Path>) -> Self
     where
+        Fmt: Format,
+        Fmt: figment2::providers::Format,
+    {
+        self.fig = self
+            .fig
+            .admerge(Fmt::file(path).search(false).required(true));
+        self
+    }
+
+    pub fn with_source_files<Fmt, I, P>(mut self, paths: I) -> Self
+    where
+        Fmt: Format,
+        Fmt: figment2::providers::Format,
         I: IntoIterator<Item = P>,
-        P: Into<PathBuf>,
+        P: AsRef<Path>,
     {
         for p in paths.into_iter() {
-            self.paths.push(p.into());
+            self = self.with_source_file::<Fmt>(p);
         }
         self
     }
 
-    pub fn with_env_var_prefix(mut self, prefix: impl Into<String>) -> Self {
-        self.env_var_prefix = Some(prefix.into());
+    pub fn with_source_env_vars(mut self, prefix: impl AsRef<str>) -> Self {
+        self.fig = self.fig.admerge(
+            figment2::providers::Env::prefixed(prefix.as_ref())
+                .split("__")
+                .lowercase(false),
+        );
         self
     }
 
     /// Deserializes the marged config into a struct
     pub fn extract(&self) -> Result<Cfg, ReadError> {
-        self.to_figment().extract().map_err(Into::into)
+        self.fig.extract().map_err(Into::into)
     }
 
     /// Returns raw merged data
@@ -79,8 +95,7 @@ where
         if with_defaults {
             panic!("Merging with default currently requires `setty/derive-jsonschema` feature")
         }
-        let fig = self.to_figment();
-        let mut data = fig.data()?;
+        let mut data = self.fig.data()?;
         let value = data.remove(&figment2::Profile::default()).unwrap();
         Ok(value)
     }
@@ -93,21 +108,29 @@ where
     }
 
     /// Sets the value under specified path creating new or merging it into existing config file
-    pub fn set_value(
+    pub fn set_value<Fmt>(
         &self,
         path: &str,
         value: impl Into<Value>,
         in_config_path: impl AsRef<Path>,
-    ) -> Result<(), WriteError> {
-        self.set_value_impl(path, value.into(), in_config_path.as_ref())
+    ) -> Result<(), WriteError>
+    where
+        Fmt: Format,
+        Fmt: figment2::providers::Format,
+    {
+        self.set_value_impl::<Fmt>(path, value.into(), in_config_path.as_ref())
     }
 
-    fn set_value_impl(
+    fn set_value_impl<Fmt>(
         &self,
         path: &str,
         mut value: Value,
         in_config_path: &Path,
-    ) -> Result<(), WriteError> {
+    ) -> Result<(), WriteError>
+    where
+        Fmt: Format,
+        Fmt: figment2::providers::Format,
+    {
         use figment2::value::{Dict, Tag, Value};
         // Nest value under the path
         for segment in path.rsplit('.') {
@@ -117,8 +140,10 @@ where
         // Read config merged with the new value to validate
         {
             let fig = self
-                .to_figment()
+                .fig
+                .clone()
                 .admerge(figment2::providers::Serialized::defaults(&value));
+
             fig.extract::<Cfg>()?;
         }
 
@@ -130,8 +155,8 @@ where
         } else {
             // Read target config merged with the new value
             let fig = Self::new()
-                .with_path(in_config_path)
-                .to_figment()
+                .with_source_file::<Fmt>(in_config_path)
+                .into_figment()
                 .admerge(figment2::providers::Serialized::defaults(&value));
 
             let mut merged = fig.data()?;
@@ -145,11 +170,15 @@ where
     }
 
     // TODO: Validate new config before writing?
-    pub fn unset_value(
+    pub fn unset_value<Fmt>(
         &self,
         path: &str,
         in_config_path: &Path,
-    ) -> Result<Option<Value>, WriteError> {
+    ) -> Result<Option<Value>, WriteError>
+    where
+        Fmt: Format,
+        Fmt: figment2::providers::Format,
+    {
         let data = std::fs::read(in_config_path)?;
         let data = str::from_utf8(&data).unwrap();
         let mut value: Value =
@@ -176,27 +205,6 @@ where
         }
     }
 
-    /// Escape hatch to get the merged [`figment2::Figment`] object
-    pub fn to_figment(&self) -> figment2::Figment {
-        let mut fig = figment2::Figment::new();
-
-        for p in &self.paths {
-            fig = fig.admerge(Fmt::file(p).search(false).required(true));
-        }
-
-        fig = if let Some(env_var_prefix) = &self.env_var_prefix {
-            fig.admerge(
-                figment2::providers::Env::prefixed(env_var_prefix)
-                    .split("__")
-                    .lowercase(false),
-            )
-        } else {
-            fig
-        };
-
-        fig
-    }
-
     fn find_value(path: &str, data: Value) -> Option<Value> {
         let mut current = data;
 
@@ -216,20 +224,15 @@ where
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #[cfg(feature = "derive-jsonschema")]
-impl<Cfg, Fmt> Config<Cfg, Fmt>
+impl<Cfg> Config<Cfg>
 where
-    Cfg: Default,
     Cfg: serde::Deserialize<'static>,
-    Cfg: serde::Serialize,
     Cfg: schemars::JsonSchema,
-    Fmt: Format,
-    Fmt: figment2::providers::Format,
 {
     /// Returns raw merged data
     #[cfg(feature = "derive-jsonschema")]
     pub fn data(&self, with_defaults: bool) -> Result<figment2::value::Dict, ReadError> {
-        let fig = self.to_figment();
-        let mut data = fig.data()?;
+        let mut data = self.fig.data()?;
         let value = data.remove(&figment2::Profile::default()).unwrap();
 
         if !with_defaults {
@@ -337,6 +340,14 @@ where
                 Self::all_paths_rec(&ppath, val, defs, ret);
             }
         }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+impl<Cfg> From<Config<Cfg>> for figment2::Figment {
+    fn from(value: Config<Cfg>) -> Self {
+        value.fig
     }
 }
 

@@ -2,7 +2,7 @@
 
 #[test]
 fn test_explicit_derives() {
-    // Always derive Clone
+    // Always derives Clone, deduplicating it with one from Config
     #[setty::derive(setty::Config, Clone)]
     struct A {
         x: u32,

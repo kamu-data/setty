@@ -26,9 +26,9 @@ fn test_config_ops() {
             ),
         )?;
 
-        let fig = setty::Config::<MyConfig, setty::format::Yaml>::new()
-            .with_path("1.yaml")
-            .with_path("2.yaml");
+        let fig = setty::Config::<MyConfig>::new()
+            .with_source_file::<setty::format::Yaml>("1.yaml")
+            .with_source_file::<setty::format::Yaml>("2.yaml");
 
         // Extract
         let cfg = fig.extract().unwrap();
@@ -88,7 +88,13 @@ fn test_config_ops() {
         );
 
         // Set value
-        fig.set_value("encryption.key", "bar", "2.yaml").unwrap();
+        fig.set_value::<setty::format::Yaml>("encryption.key", "bar", "2.yaml")
+            .unwrap();
+
+        // Re-init figment to reset its cache
+        let fig = setty::Config::<MyConfig>::new()
+            .with_source_file::<setty::format::Yaml>("1.yaml")
+            .with_source_file::<setty::format::Yaml>("2.yaml");
 
         pretty_assertions::assert_eq!(
             fig.get_value("encryption.key", false).unwrap(),

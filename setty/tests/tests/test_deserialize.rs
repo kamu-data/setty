@@ -301,3 +301,66 @@ fn test_default() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+
+#[test]
+fn test_serde_rename_unit() {
+    #[derive(setty::Config)]
+    struct A {
+        #[config(required)]
+        b: B,
+    }
+
+    #[derive(setty::Config)]
+    enum B {
+        Foo,
+
+        #[serde(rename = "Baz")]
+        Bar,
+    }
+
+    // Setty will consider new name `Baz` and apply the case aliases to it, not to `Bar`
+    let cfg: A = setty::Config::new()
+        .with_source_str::<setty::format::Yaml>(r#"b: baz"#)
+        .extract()
+        .unwrap();
+
+    assert_eq!(cfg, A { b: B::Bar });
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#[test]
+fn test_serde_rename_enum() {
+    #[derive(setty::Config)]
+    struct A {
+        #[config(required)]
+        b: B,
+    }
+
+    #[derive(setty::Config)]
+    #[serde(tag = "type")]
+    enum B {
+        Foo(C),
+
+        #[serde(rename = "Baz")]
+        Bar(C),
+    }
+
+    #[derive(setty::Config)]
+    struct C {}
+
+    // Setty will consider new name `Baz` and apply the case aliases to it, not to `Bar`
+    let cfg: A = setty::Config::new()
+        .with_source_str::<setty::format::Yaml>(
+            r#"
+            b:
+                type: baz
+            "#,
+        )
+        .extract()
+        .unwrap();
+
+    assert_eq!(cfg, A { b: B::Bar(C {}) });
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////

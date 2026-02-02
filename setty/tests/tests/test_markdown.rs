@@ -7,7 +7,7 @@
 fn test_markdown() {
     use super::test_deserialize::MyConfig;
 
-    let md = setty::Config::<MyConfig, setty::format::Json>::new().markdown();
+    let md = setty::Config::<MyConfig>::new().markdown();
     std::fs::write("tests/tests/gen/markdown.md", md).unwrap();
 }
 
