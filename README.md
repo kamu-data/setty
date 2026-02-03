@@ -5,6 +5,8 @@
 Popular configuration crates like `config` and `figment` deal with **reading** and **merging** values from multiple sources. They leave it up to you to handle **parsing** using `serde` derives. This is a good separation of concerns, but it leaves a lot of important details to you. Like remembering to put `#[serde(deny_unknown_fields)]` not to realize that your production config had no effect because of a small typo.
 
 Also, you may need features beyond parsing:
+- Consistent defaults between `Default::default()` and deserialization
+- Per-field merge strategies *(e.g. do you replace arrays or combine values)*
 - Documentation generation
 - JSONSchema generation *(e.g. for Helm chart values validation)*
 - Auto-completion in CLI
@@ -14,25 +16,43 @@ Layering more libraries and macros makes your models **very verbose**:
 
 ```rust
 #[serde_with::skip_serializing_none]
-#[derive(Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize, serde_valid::Validate, schemars::JsonSchema)]
+#[derive(
+    Debug,
+    PartialEq, Eq,
+    better_default::Default,
+    serde::Deserialize, serde::Serialize,
+    serde_valid::Validate,
+    schemars::JsonSchema,
+)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 struct AppConfig {
+    /// Need to be explicit about using default for `serde`
     #[serde(default)]
     database: DatabaseConfig,
 
-    #[validate(min_length = 5)]
-    username: String,
-
+    /// Note how defaults in `serde` and `Default::default()` are two separate things
+    #[default(AppConfig::default_hostname())]
     #[serde(default = "AppConfig::default_hostname")]
+    #[validate(min_length = 5)]
     hostname: String,
 
-    // !! DO NOT USE !!!
+    #[default(AppConfig::default_username())]
+    #[serde(default = "AppConfig::default_username")]
+    username: Username,
+
+    /// !! DO NOT USE !!!
+    /// Deprecation is done by leaving screamy comments
     password: Option<String>
 }
 
+/// No inline default epressions in `serde` - must use functions
 impl AppConfig {
     fn default_hostname() -> String {
         "localhost".into()
+    }
+
+    fn default_username() -> Username {
+        "root".parse().unwrap()
     }
 }
 ```
@@ -43,20 +63,26 @@ And even if you power through this problem in your application - you'll face a *
 Use one simple macro:
 ```rust
 /// Docstrings will appear in Markdown and JSON Schema outputs
-#[derive(setty::Config)]
+#[derive(
+    // Implements all serde and schema stuff
+    setty::Config,
+    // Reuses same defaults to implement `Default` trait 
+    setty::Default,
+)]
 struct AppConfig {
-    /// All fields are initialized using `Default::default`
+    /// Opt-in into using `Default::default`
+    #[config(default)]
     database: DatabaseConfig,
 
-    /// You can annotate fields that must be specified explicitly
-    #[config(required)]
+    /// Or specify default values in-line (support full expressions)
+    #[config(default = "localhost")]
     /// Basic validation can be delegated to `serde_valid` crate
     #[config(validate(min_length = 5))]
-    username: String,
-
-    /// Default values can be specified in-line (support full expressions)
-    #[config(default = "localhost")]
     hostname: String,
+
+    /// Use `default_str` to parse the value
+    #[config(default_str = "root")]
+    username: Username,
 
     /// Use of deptecated values can be reported as warnings or fail strict validation
     #[deprecated = "Avoid specifying password in config file"]

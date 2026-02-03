@@ -5,9 +5,11 @@
 #[derive(setty::Config, setty::Default)]
 pub struct MyConfig {
     /// Database configuration
+    #[config(default)]
     pub database: DatabaseConfig,
 
     /// Optional encryption
+    #[config(default)]
     pub encryption: Option<EncryptionConfig>,
 }
 
@@ -44,10 +46,10 @@ pub struct PostgresDatabaseConfig {
 #[derive(setty::Config)]
 pub struct EncryptionConfig {
     /// Encryption key
-    #[config(required)]
     pub key: String,
 
     /// Encryption algorythm
+    #[config(default)]
     pub algo: EncryptionAlgo,
 }
 
@@ -267,10 +269,13 @@ fn test_default() {
         #[config(default = 42)]
         foo: u32,
 
-        #[config(default_parse = "42")]
+        #[config(default_str = "42")]
         bar: u32,
 
+        #[config(default)]
         baz: Baz,
+
+        opt: Option<u32>,
     }
 
     #[derive(setty::Config, setty::Default)]
@@ -285,7 +290,8 @@ fn test_default() {
         Config {
             foo: 42,
             bar: 42,
-            baz: Baz::Y
+            baz: Baz::Y,
+            opt: None,
         }
     );
 
@@ -295,7 +301,8 @@ fn test_default() {
         Config {
             foo: 42,
             bar: 42,
-            baz: Baz::Y
+            baz: Baz::Y,
+            opt: None,
         }
     );
 }
@@ -306,7 +313,6 @@ fn test_default() {
 fn test_serde_rename_unit() {
     #[derive(setty::Config)]
     struct A {
-        #[config(required)]
         b: B,
     }
 
@@ -333,7 +339,6 @@ fn test_serde_rename_unit() {
 fn test_serde_rename_enum() {
     #[derive(setty::Config)]
     struct A {
-        #[config(required)]
         b: B,
     }
 

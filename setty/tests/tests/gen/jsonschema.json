@@ -61,13 +61,13 @@
             },
             "schema_name": {
               "description": "Name of the schema",
-              "type": "string",
-              "default": ""
+              "type": "string"
             }
           },
           "additionalProperties": false,
           "required": [
-            "kind"
+            "kind",
+            "schema_name"
           ]
         }
       ]

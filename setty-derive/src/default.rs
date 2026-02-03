@@ -10,16 +10,16 @@ pub(crate) fn default_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStre
             let mut defaults = Vec::new();
 
             for field in &mut item.fields {
-                let opts = ConfigFieldOpts::extract_from(&mut field.attrs)?;
+                let opts = ConfigFieldOpts::extract_from(field)?;
 
-                if opts.required.unwrap_or_default() {
+                let Some(default) = opts.default else {
                     return Err(syn::Error::new_spanned(
                         input,
                         "Cannot derive Default for a struct with required fields",
                     ));
-                }
+                };
 
-                let expr = if opts.default.is_some() || opts.default_parse.is_some() {
+                let expr = if let Some(_expr) = default {
                     let fname = quote::format_ident!("default_{}", field.ident.as_ref().unwrap());
                     quote! { Self::#fname() }
                 } else {
@@ -46,7 +46,11 @@ pub(crate) fn default_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStre
         syn::Data::Enum(item) => {
             let mut default = None;
             for variant in &item.variants {
-                if variant.attrs.iter().any(is_default) {
+                if variant
+                    .attrs
+                    .iter()
+                    .any(|attr| attr.path().is_ident("default"))
+                {
                     default = Some(variant);
                 }
             }

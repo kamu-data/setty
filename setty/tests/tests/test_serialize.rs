@@ -27,6 +27,7 @@ fn test_dont_serialize_none() {
 fn test_tag_override() {
     #[derive(setty::Config, setty::Default)]
     struct A {
+        #[config(default)]
         b: B,
     }
 
@@ -40,11 +41,13 @@ fn test_tag_override() {
 
     #[derive(setty::Config, setty::Default)]
     struct X {
+        #[config(default)]
         a: u32,
     }
 
     #[derive(setty::Config, setty::Default)]
     struct Y {
+        #[config(default)]
         a: u32,
     }
 

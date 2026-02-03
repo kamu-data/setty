@@ -7,18 +7,14 @@ use syn::spanned::Spanned;
 /////////////////////////////////////////////////////////////////////////////////////////
 
 pub(crate) struct ConfigFieldOpts {
-    pub required: Option<bool>,
-    pub default: Option<syn::Expr>,
-    pub default_parse: Option<syn::LitStr>,
+    pub default: Option<Option<syn::Expr>>,
     pub span: Span,
 }
 
 impl ConfigFieldOpts {
     fn new(span: Span) -> Self {
         Self {
-            required: None,
             default: None,
-            default_parse: None,
             span,
         }
     }
@@ -26,18 +22,8 @@ impl ConfigFieldOpts {
     pub fn merge(&mut self, other: Self) -> syn::Result<()> {
         self.span = other.span;
 
-        if other.required.is_some() {
-            if self.required.is_some() {
-                return Err(syn::Error::new(
-                    other.span,
-                    "`required` specified more than once",
-                ));
-            }
-            self.required = other.required;
-        }
-
         if other.default.is_some() {
-            if self.default.is_some() || self.default_parse.is_some() {
+            if self.default.is_some() {
                 return Err(syn::Error::new(
                     other.span,
                     "`default` specified more than once",
@@ -46,37 +32,25 @@ impl ConfigFieldOpts {
             self.default = other.default;
         }
 
-        if other.default_parse.is_some() {
-            if self.default.is_some() || self.default_parse.is_some() {
-                return Err(syn::Error::new(
-                    other.span,
-                    "`default` specified more than once",
-                ));
-            }
-            self.default_parse = other.default_parse;
-        }
-
-        if self.required == Some(true) && self.default.is_some() {
-            return Err(syn::Error::new(
-                other.span,
-                "can't be both `required` and specify a `default`",
-            ));
-        }
-
         Ok(())
     }
 
-    pub fn extract_from(attrs: &mut Vec<syn::Attribute>) -> syn::Result<Self> {
+    pub fn extract_from(field: &mut syn::Field) -> syn::Result<Self> {
         let mut opts = Self::new(proc_macro2::Span::call_site());
 
-        for attr in attrs.iter() {
+        for attr in field.attrs.iter() {
             if attr.path().is_ident("config") {
                 let more_opts = Self::parse_from(attr)?;
                 opts.merge(more_opts)?;
             }
         }
 
-        attrs.retain(|attr| !attr.path().is_ident("config"));
+        field.attrs.retain(|attr| !attr.path().is_ident("config"));
+
+        // Provide a default for `Option<T>`
+        if opts.default.is_none() && is_option(&field.ty) {
+            opts.default = Some(None);
+        }
 
         Ok(opts)
     }
@@ -85,14 +59,27 @@ impl ConfigFieldOpts {
         let mut opts = Self::new(attr.span());
 
         attr.parse_nested_meta(|meta| {
-            if meta.path.is_ident("required") {
-                opts.required = Some(true);
-            } else if meta.path.is_ident("default") {
-                let value: syn::Expr = meta.value()?.parse()?;
-                opts.default = Some(value);
-            } else if meta.path.is_ident("default_parse") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                opts.default_parse = Some(value);
+            if meta.path.is_ident("default") {
+                if meta.input.peek(syn::Token![=]) {
+                    let expr: syn::Expr = meta.value()?.parse()?;
+
+                    // Add `.into()` coersion to everything except int literals
+                    let expr = match expr {
+                        syn::Expr::Lit(syn::ExprLit {
+                            lit: syn::Lit::Int(_),
+                            attrs: _,
+                        }) => expr,
+                        _ => syn::parse_quote!(#expr.into()),
+                    };
+
+                    opts.default = Some(Some(expr));
+                } else {
+                    opts.default = Some(None)
+                }
+            } else if meta.path.is_ident("default_str") {
+                let lit: syn::LitStr = meta.value()?.parse()?;
+                let expr: syn::Expr = syn::parse_quote!(#lit.parse().unwrap());
+                opts.default = Some(Some(expr));
             } else {
                 return Err(syn::Error::new(
                     meta.path.span(),
@@ -222,8 +209,12 @@ impl SerdeFieldOpts {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-pub(crate) fn is_default(attr: &syn::Attribute) -> bool {
-    attr.path().is_ident("default")
+pub(crate) fn is_option(typ: &syn::Type) -> bool {
+    let syn::Type::Path(typ) = typ else {
+        panic!("Expected a Type::Path");
+    };
+
+    typ.qself.is_none() && &typ.path.segments.last().unwrap().ident == "Option"
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

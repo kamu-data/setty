@@ -74,43 +74,28 @@ pub(crate) fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStrea
             }
 
             for field in &mut item.fields {
-                let opts = ConfigFieldOpts::extract_from(&mut field.attrs)?;
+                let opts = ConfigFieldOpts::extract_from(field)?;
 
-                if !opts.required.unwrap_or_default() {
-                    let new_default_attr: syn::Attribute =
-                        if opts.default.is_some() || opts.default_parse.is_some() {
-                            let expr = if let Some(expr) = opts.default {
-                                match &expr {
-                                    syn::Expr::Lit(syn::ExprLit {
-                                        lit: syn::Lit::Int(_),
-                                        attrs: _,
-                                    }) => quote! { #expr },
-                                    _ => quote! { #expr.into() },
-                                }
-                            } else if let Some(lit) = opts.default_parse {
-                                quote!( #lit.parse().unwrap() )
-                            } else {
-                                unreachable!()
-                            };
+                if let Some(default) = opts.default {
+                    let new_default_attr: syn::Attribute = if let Some(default_expr) = default {
+                        let fname =
+                            quote::format_ident!("default_{}", field.ident.as_ref().unwrap());
+                        let path_str = syn::Lit::Str(syn::LitStr::new(
+                            &format!("{}::{}", input.ident, fname),
+                            opts.span,
+                        ));
+                        let rtype = &field.ty;
 
-                            let fname =
-                                quote::format_ident!("default_{}", field.ident.as_ref().unwrap());
-                            let path_str = syn::Lit::Str(syn::LitStr::new(
-                                &format!("{}::{}", input.ident, fname),
-                                opts.span,
-                            ));
-                            let rtype = &field.ty;
+                        default_functions.push(quote! {
+                            fn #fname() -> #rtype { #default_expr }
+                        });
 
-                            default_functions.push(quote! {
-                                fn #fname() -> #rtype { #expr }
-                            });
-
-                            syn::parse_quote! {
-                                #[serde(default = #path_str)]
-                            }
-                        } else {
-                            syn::parse_quote!(#[serde(default)])
-                        };
+                        syn::parse_quote! {
+                            #[serde(default = #path_str)]
+                        }
+                    } else {
+                        syn::parse_quote!(#[serde(default)])
+                    };
 
                     #[cfg(feature = "derive-deserialize")]
                     field.attrs.push(new_default_attr);

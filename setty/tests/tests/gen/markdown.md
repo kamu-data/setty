@@ -32,7 +32,7 @@ Postgres driver
 |---|---|---|---|
 | `host` | `string` |  | Host name |
 | `kind` | `string` | `V` |  |
-| `schema_name` | `string` |  | Name of the schema |
+| `schema_name` | `string` | `V` | Name of the schema |
 
 
 ## `EncryptionAlgo`
