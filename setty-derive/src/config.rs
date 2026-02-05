@@ -136,13 +136,16 @@ pub(crate) fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStrea
             ))]
             {
                 for variant in &mut item.variants {
+                    use std::collections::BTreeSet;
+
                     let serde_variant = SerdeFieldOpts::parse(&variant.attrs)?;
 
+                    let mut aliases = BTreeSet::new();
                     let name = serde_variant.rename.unwrap_or(variant.ident.to_string());
-                    let mut names = serde_variant.alias.clone();
-                    names.push(name.clone());
-
-                    let mut aliases = case_permutations(&names);
+                    enum_variant_all_case_permutations(&name, &mut aliases);
+                    for alias in &serde_variant.alias {
+                        enum_variant_all_case_permutations(alias, &mut aliases);
+                    }
                     aliases.remove(&name);
 
                     for alias in aliases {

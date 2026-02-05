@@ -22,7 +22,7 @@ pub(crate) fn combine_impl(input: &syn::DeriveInput) -> syn::Result<TokenStream>
                 let opts = ConfigFieldOpts::parse_from(field)?;
                 let field_serde = SerdeFieldOpts::parse(&field.attrs)?;
 
-                let (ty, combine) = if let Some(combine) = opts.combine {
+                let (field_ty_raw, combine) = if let Some(combine) = opts.combine {
                     (&field.ty, combine)
                 } else {
                     default_combine_for(&field.ty)
@@ -42,7 +42,7 @@ pub(crate) fn combine_impl(input: &syn::DeriveInput) -> syn::Result<TokenStream>
                     Combine::Merge => quote! {
                         // TODO: Consider key case permutations and aliases
                         if let Some(ll) = lhs.get_mut(&k) {
-                            <#ty as ::setty::combine::Combine>::merge(ll, v);
+                            <#field_ty_raw as ::setty::combine::Combine>::merge(ll, v);
                         } else {
                             lhs.insert(k, v);
                         }
@@ -186,10 +186,10 @@ fn field_aliases(field: &syn::Field, opts: &SerdeFieldOpts) -> Vec<syn::LitStr> 
         .clone()
         .unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
 
-    aliases.insert(name);
+    field_case_permutations(&name, &mut aliases);
 
     for alias in &opts.alias {
-        aliases.insert(alias.clone());
+        field_case_permutations(alias, &mut aliases);
     }
 
     aliases

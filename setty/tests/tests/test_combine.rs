@@ -31,7 +31,6 @@ fn test_combine_strategies() {
         #[config(default, /* combine(replace) */)]
         map_replace: BTreeMap<String, String>,
 
-        #[config(default)]
         #[config(default, combine(merge))]
         map_merge: BTreeMap<String, String>,
 

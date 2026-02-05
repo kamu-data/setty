@@ -15,16 +15,19 @@ pub(crate) enum Combine {
 
 impl Combine {
     pub fn to_str_lit(&self) -> syn::LitStr {
-        let s = format!("{self:?}").to_lowercase();
-        syn::LitStr::new(&s, Span::call_site())
+        let s = match self {
+            Combine::Keep => "keep",
+            Combine::Replace => "replace",
+            Combine::Merge => "merge",
+        };
+        syn::LitStr::new(s, Span::call_site())
     }
 }
 
 impl syn::parse::Parse for Combine {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let ident: syn::Ident = input.parse()?;
-        let ident = ident.to_string();
-        match ident.as_str() {
+        match ident.to_string().as_str() {
             "keep" => Ok(Self::Keep),
             "replace" => Ok(Self::Replace),
             "merge" => Ok(Self::Merge),
@@ -308,16 +311,31 @@ pub(crate) fn variants_case() -> Option<&'static str> {
     case
 }
 
-pub(crate) fn case_permutations(names: &[String]) -> std::collections::BTreeSet<String> {
-    let mut ret = std::collections::BTreeSet::new();
+pub(crate) fn field_case_permutations(name: &str, set: &mut std::collections::BTreeSet<String>) {
+    #[cfg(feature = "case-fields-lower")]
+    set.insert(name.to_lowercase());
 
-    for name in names {
-        ret.insert(name.to_owned());
-        ret.insert(name.to_lowercase());
-        ret.insert(pascal_to_camel(name));
-    }
+    #[cfg(feature = "case-fields-pascal")]
+    set.insert(snake_to_pascal(name));
 
-    ret
+    #[cfg(feature = "case-fields-camel")]
+    set.insert(pascal_to_camel(&snake_to_pascal(name)));
+
+    #[cfg(feature = "case-fields-kebab")]
+    set.insert(snake_to_kebab(name));
+
+    // Default for `--all-features`
+    #[cfg(feature = "case-fields-snake")]
+    set.insert(name.to_string());
+}
+
+pub(crate) fn enum_variant_all_case_permutations(
+    name: &str,
+    set: &mut std::collections::BTreeSet<String>,
+) {
+    set.insert(name.to_string());
+    set.insert(name.to_lowercase());
+    set.insert(pascal_to_camel(name));
 }
 
 pub(crate) fn pascal_to_camel(s: &str) -> String {
@@ -332,4 +350,21 @@ pub(crate) fn pascal_to_camel(s: &str) -> String {
             result
         }
     }
+}
+
+pub fn snake_to_pascal(s: &str) -> String {
+    s.split('_')
+        .filter(|part| !part.is_empty())
+        .map(|part| {
+            let mut chars = part.chars();
+            match chars.next() {
+                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+                None => String::new(),
+            }
+        })
+        .collect()
+}
+
+pub fn snake_to_kebab(s: &str) -> String {
+    s.replace('_', "-")
 }
