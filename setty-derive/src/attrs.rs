@@ -327,6 +327,15 @@ pub(crate) fn field_case_permutations(name: &str, set: &mut std::collections::BT
     // Default for `--all-features`
     #[cfg(feature = "case-fields-snake")]
     set.insert(name.to_string());
+
+    #[cfg(not(any(
+        feature = "case-fields-lower",
+        feature = "case-fields-pascal",
+        feature = "case-fields-camel",
+        feature = "case-fields-snake",
+        feature = "case-fields-kebab",
+    )))]
+    set.insert(name.to_string());
 }
 
 pub(crate) fn enum_variant_all_case_permutations(

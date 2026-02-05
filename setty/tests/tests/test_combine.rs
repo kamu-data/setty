@@ -1,3 +1,5 @@
+#![cfg(feature = "fmt-yaml")]
+
 /////////////////////////////////////////////////////////////////////////////////////////
 
 use std::collections::BTreeMap;
@@ -19,6 +21,7 @@ fn test_combine_strategies() {
         #[config(default, /* combine(replace) */)]
         string_enu: StringEnum,
 
+        #[cfg(feature = "type-duration-string05")]
         #[config(default = std::time::Duration::ZERO, combine(replace))]
         newtype: setty::types::DurationString,
 

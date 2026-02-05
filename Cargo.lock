@@ -757,7 +757,7 @@ dependencies = [
 
 [[package]]
 name = "setty"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -778,7 +778,7 @@ dependencies = [
 
 [[package]]
 name = "setty-derive"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "proc-macro2",
  "quote",

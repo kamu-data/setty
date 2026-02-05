@@ -24,7 +24,6 @@ derive-deserialize = ["setty-derive/derive-deserialize"]
 derive-serialize = ["setty-derive/derive-serialize", "dep:serde_with"]
 derive-jsonschema = [
     "setty-derive/derive-jsonschema",
-    "dep:serde_json",
     "dep:schemars",
     "schemars/derive",
 ]
@@ -44,7 +43,7 @@ case-enums-kebab = ["setty-derive/case-enums-kebab"]
 case-enums-any = ["setty-derive/case-enums-any"]
 
 fmt-toml = ["figment2/toml"]
-fmt-json = ["figment2/json", "dep:serde_json"]
+fmt-json = ["figment2/json"]
 fmt-yaml = ["figment2/yaml", "dep:serde_yaml"]
 
 type-bigdecimal04 = ["schemars/bigdecimal04", "dep:bigdecimal"]
@@ -75,7 +74,7 @@ duration-string = { optional = true, version = "0.5", default-features = false, 
     "serde",
 ] }
 schemars = { optional = true, version = "1", default-features = false }
-serde_json = { optional = true, version = "1", features = [] }
+serde_json = { version = "1", features = [] }
 serde_with = { optional = true, version = "3", default-features = false, features = [
     "macros",
 ] }

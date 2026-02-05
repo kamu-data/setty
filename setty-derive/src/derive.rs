@@ -33,6 +33,7 @@ fn deduplicated_derives(attr: TokenStream) -> syn::Result<Vec<syn::Path>> {
 
     let derives_config = derives.iter().any(|p| path_matches(p, "setty::Config"));
 
+    #[allow(unused)]
     derives.retain(|p| {
         if derives_config {
             #[cfg(feature = "derive-clone")]

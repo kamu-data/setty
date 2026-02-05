@@ -2,8 +2,8 @@
 
 #[test]
 fn test_deduplicates_explicit_derives() {
-    // Always derives Clone, deduplicating it with one from Config
-    #[setty::derive(setty::Config, Clone)]
+    // Always derives Debug, Clone, Eq, deduplicating it with one from Config
+    #[setty::derive(setty::Config, Debug, Clone, PartialEq, Eq)]
     struct A {
         x: u32,
     }
