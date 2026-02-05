@@ -1,15 +1,17 @@
 #![allow(unused)]
 
-use std::{marker::PhantomData, path::Path};
+use std::{marker::PhantomData, path::Path, rc::Rc};
 
 use figment2::Provider as _;
 
+#[cfg(feature = "derive-deserialize")]
+use crate::combine::Combine;
 use crate::{Value, format::Format};
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
 pub struct Config<Cfg> {
-    fig: figment2::Figment,
+    providers: Vec<Rc<dyn figment2::Provider>>,
     _t_cfg: PhantomData<Cfg>,
 }
 
@@ -18,7 +20,16 @@ pub struct Config<Cfg> {
 impl<Cfg> Default for Config<Cfg> {
     fn default() -> Self {
         Self {
-            fig: figment2::Figment::new(),
+            providers: Vec::new(),
+            _t_cfg: PhantomData,
+        }
+    }
+}
+
+impl<Cfg> Clone for Config<Cfg> {
+    fn clone(&self) -> Self {
+        Self {
+            providers: self.providers.clone(),
             _t_cfg: PhantomData,
         }
     }
@@ -30,40 +41,50 @@ impl<Cfg> Default for Config<Cfg> {
 impl<Cfg> Config<Cfg>
 where
     Cfg: serde::Deserialize<'static>,
+    Cfg: Combine,
 {
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Escape hatch to get raw figment
-    pub fn into_figment(self) -> figment2::Figment {
-        self.fig
+    pub fn with_source_serialized<T: serde::Serialize + 'static>(mut self, obj: T) -> Self {
+        self.providers
+            .push(Rc::new(figment2::providers::Serialized::defaults(obj)));
+        self
+    }
+
+    pub fn with_source_value(mut self, data: Value) -> Self {
+        self.providers
+            .push(Rc::new(figment2::providers::Serialized::defaults(data)));
+        self
     }
 
     pub fn with_source_str<Fmt>(mut self, data: impl AsRef<str>) -> Self
     where
+        Fmt: 'static,
         Fmt: Format,
         Fmt: figment2::providers::Format,
     {
-        self.fig = self
-            .fig
-            .admerge(Fmt::string(data.as_ref()).search(false).required(true));
+        self.providers.push(Rc::new(
+            Fmt::string(data.as_ref()).search(false).required(true),
+        ));
         self
     }
 
     pub fn with_source_file<Fmt>(mut self, path: impl AsRef<Path>) -> Self
     where
+        Fmt: 'static,
         Fmt: Format,
         Fmt: figment2::providers::Format,
     {
-        self.fig = self
-            .fig
-            .admerge(Fmt::file(path).search(false).required(true));
+        self.providers
+            .push(Rc::new(Fmt::file(path).search(false).required(true)));
         self
     }
 
     pub fn with_source_files<Fmt, I, P>(mut self, paths: I) -> Self
     where
+        Fmt: 'static,
         Fmt: Format,
         Fmt: figment2::providers::Format,
         I: IntoIterator<Item = P>,
@@ -76,28 +97,61 @@ where
     }
 
     pub fn with_source_env_vars(mut self, prefix: impl AsRef<str>) -> Self {
-        self.fig = self.fig.admerge(
+        self.providers.push(Rc::new(
             figment2::providers::Env::prefixed(prefix.as_ref())
                 .split("__")
                 .lowercase(false),
-        );
+        ));
         self
     }
 
     /// Deserializes the marged config into a struct
     pub fn extract(&self) -> Result<Cfg, ReadError> {
-        self.fig.extract().map_err(Into::into)
+        let value = self.data_combined()?;
+        figment2::Figment::new()
+            .join(figment2::providers::Serialized::defaults(&value))
+            .extract()
+            .map_err(Into::into)
+    }
+
+    fn data_combined(&self) -> Result<Value, ReadError> {
+        let mut combined = serde_json::Value::Object(Default::default());
+
+        for p in &self.providers {
+            let mut new = p.data()?;
+            let new = new.remove(&figment2::Profile::default()).unwrap();
+
+            // TODO: Avoid this by getting rid of figment entirely
+            let mut new: serde_json::Value = {
+                let json = serde_json::to_string(&new).unwrap();
+                serde_json::from_str(&json).unwrap()
+            };
+
+            combined = if combined.as_object().unwrap().is_empty() {
+                new
+            } else {
+                Cfg::merge(&mut combined, new);
+                combined
+            };
+        }
+
+        // Transcode back ... ugh, I know
+        let combined: Value = {
+            let json = serde_json::to_string(&combined).unwrap();
+            serde_json::from_str(&json).unwrap()
+        };
+
+        Ok(combined)
     }
 
     /// Returns raw merged data
     #[cfg(not(feature = "derive-jsonschema"))]
-    pub fn data(&self, with_defaults: bool) -> Result<figment2::value::Dict, ReadError> {
+    pub fn data(&self, with_defaults: bool) -> Result<Value, ReadError> {
         if with_defaults {
             panic!("Merging with default currently requires `setty/derive-jsonschema` feature")
         }
-        let mut data = self.fig.data()?;
-        let value = data.remove(&figment2::Profile::default()).unwrap();
-        Ok(value)
+        let mut value = self.data_combined()?;
+        Ok(value.into())
     }
 
     /// Returns value under specified path
@@ -115,6 +169,7 @@ where
         in_config_path: impl AsRef<Path>,
     ) -> Result<(), WriteError>
     where
+        Fmt: 'static,
         Fmt: Format,
         Fmt: figment2::providers::Format,
     {
@@ -128,6 +183,7 @@ where
         in_config_path: &Path,
     ) -> Result<(), WriteError>
     where
+        Fmt: 'static,
         Fmt: Format,
         Fmt: figment2::providers::Format,
     {
@@ -137,14 +193,9 @@ where
             value = Value::Dict(Tag::Default, Dict::from([(segment.to_string(), value)]));
         }
 
-        // Read config merged with the new value to validate
+        // Read config merged with new values to validate
         {
-            let fig = self
-                .fig
-                .clone()
-                .admerge(figment2::providers::Serialized::defaults(&value));
-
-            fig.extract::<Cfg>()?;
+            self.clone().with_source_value(value.clone()).extract()?;
         }
 
         let content = if !in_config_path.is_file() {
@@ -154,13 +205,10 @@ where
             Fmt::serialize(&value).map_err(|e| figment2::Error::from(e.to_string()))?
         } else {
             // Read target config merged with the new value
-            let fig = Self::new()
+            let merged = Self::new()
                 .with_source_file::<Fmt>(in_config_path)
-                .into_figment()
-                .admerge(figment2::providers::Serialized::defaults(&value));
-
-            let mut merged = fig.data()?;
-            let merged = merged.remove(&figment2::Profile::default()).unwrap();
+                .with_source_value(value.clone())
+                .data_combined()?;
 
             Fmt::serialize(&merged).map_err(|e| figment2::Error::from(e.to_string()))?
         };
@@ -209,10 +257,7 @@ where
         let mut current = data;
 
         for segment in path.split(".") {
-            let mut dict = match current {
-                Value::Dict(_, value) => value,
-                _ => return None,
-            };
+            let mut dict = current.into_dict()?;
             let child = dict.remove(segment)?;
             current = child;
         }
@@ -228,12 +273,12 @@ impl<Cfg> Config<Cfg>
 where
     Cfg: serde::Deserialize<'static>,
     Cfg: schemars::JsonSchema,
+    Cfg: Combine,
 {
     /// Returns raw merged data
     #[cfg(feature = "derive-jsonschema")]
-    pub fn data(&self, with_defaults: bool) -> Result<figment2::value::Dict, ReadError> {
-        let mut data = self.fig.data()?;
-        let value = data.remove(&figment2::Profile::default()).unwrap();
+    pub fn data(&self, with_defaults: bool) -> Result<Value, ReadError> {
+        let value = self.data_combined()?;
 
         if !with_defaults {
             return Ok(value);
@@ -264,14 +309,14 @@ where
             serde_json::from_str(&json).unwrap()
         };
 
-        Ok(value.into_dict().unwrap())
+        Ok(value)
     }
 
     /// Returns value under specified path
     #[cfg(feature = "derive-jsonschema")]
     pub fn get_value(&self, path: &str, with_defaults: bool) -> Result<Option<Value>, ReadError> {
         let data = self.data(with_defaults)?;
-        Ok(Self::find_value(path, data.into()))
+        Ok(Self::find_value(path, data))
     }
 
     /// Returns JSON Schema describing the config type
@@ -345,14 +390,6 @@ where
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-impl<Cfg> From<Config<Cfg>> for figment2::Figment {
-    fn from(value: Config<Cfg>) -> Self {
-        value.fig
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
 pub struct ReadError(Box<figment2::error::Error>);
@@ -394,6 +431,26 @@ fn as_dict_mut(value: &mut Value) -> Option<&mut figment2::value::Dict> {
     match value {
         Value::Dict(_tag, dict) => Some(dict),
         _ => None,
+    }
+}
+
+// TODO: Get rid of this
+struct WrappedProvider(Rc<dyn figment2::Provider>);
+
+impl figment2::Provider for WrappedProvider {
+    fn metadata(&self) -> figment2::Metadata {
+        self.0.metadata()
+    }
+
+    fn data(
+        &self,
+    ) -> Result<figment2::value::Map<figment2::Profile, figment2::value::Dict>, figment2::Error>
+    {
+        self.0.data()
+    }
+
+    fn profile(&self) -> Option<figment2::Profile> {
+        self.0.profile()
     }
 }
 

@@ -1,3 +1,4 @@
+pub mod combine;
 mod config;
 pub mod format;
 mod markdown;
@@ -26,8 +27,12 @@ pub mod __internal {
 
     #[cfg(feature = "derive-jsonschema")]
     pub use schemars;
+
     #[cfg(any(feature = "derive-deserialize", feature = "derive-serialize"))]
     pub use serde;
+
+    pub use serde_json;
+
     #[cfg(feature = "derive-serialize")]
     pub use serde_with;
 }

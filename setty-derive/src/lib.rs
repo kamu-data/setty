@@ -1,4 +1,5 @@
 mod attrs;
+mod combine;
 mod config;
 mod default;
 mod derive;
@@ -9,10 +10,20 @@ mod derive;
 pub fn derive_config(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = syn::parse_macro_input!(input as syn::DeriveInput);
 
-    match config::config_impl(input) {
-        Ok(output) => proc_macro::TokenStream::from(output),
-        Err(err) => err.to_compile_error().into(),
-    }
+    let combine_output = match combine::combine_impl(&input) {
+        Ok(output) => output,
+        Err(err) => return err.to_compile_error().into(),
+    };
+
+    let config_output = match config::config_impl(input) {
+        Ok(output) => output,
+        Err(err) => return err.to_compile_error().into(),
+    };
+
+    proc_macro::TokenStream::from(quote::quote! {
+        #config_output
+        #combine_output
+    })
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

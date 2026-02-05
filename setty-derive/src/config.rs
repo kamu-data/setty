@@ -61,7 +61,7 @@ pub(crate) fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStrea
             syn::parse_quote!(::setty::__internal::schemars::JsonSchema),
         );
         input.attrs.push(syn::parse_quote! {
-            #[schemars(crate = "setty::__internal::schemars")]
+            #[schemars(crate = "::setty::__internal::schemars")]
         });
     }
 
@@ -75,6 +75,14 @@ pub(crate) fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStrea
 
             for field in &mut item.fields {
                 let opts = ConfigFieldOpts::extract_from(field)?;
+
+                #[cfg(feature = "derive-jsonschema")]
+                if let Some(combine) = opts.combine {
+                    let combine = combine.to_str_lit();
+                    field.attrs.push(syn::parse_quote! {
+                        #[schemars(extend("combine" = #combine))]
+                    });
+                }
 
                 if let Some(default) = opts.default {
                     let new_default_attr: syn::Attribute = if let Some(default_expr) = default {

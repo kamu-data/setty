@@ -759,6 +759,8 @@ dependencies = [
 name = "setty"
 version = "0.1.0"
 dependencies = [
+ "bigdecimal",
+ "chrono",
  "duration-string",
  "figment2",
  "indoc",
@@ -771,6 +773,7 @@ dependencies = [
  "serial_test",
  "setty-derive",
  "thiserror",
+ "url",
 ]
 
 [[package]]

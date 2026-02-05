@@ -6,7 +6,7 @@ Popular configuration crates like `config` and `figment` deal with **reading** a
 
 Also, you may need features beyond parsing:
 - Consistent defaults between `Default::default()` and deserialization
-- Per-field merge strategies *(e.g. do you replace arrays or combine values)*
+- Per-field combine strategies *(e.g. keep first value, replace with latest, merge arrays)*
 - Documentation generation
 - JSONSchema generation *(e.g. for Helm chart values validation)*
 - Auto-completion in CLI
@@ -143,9 +143,21 @@ By specifying features **only** at the top-level application crate - the desired
 
 ## Field Attributes
 These arguments can be specified in `#[config(...)]` field attribute:
-* `required` - The field must be present in config
+* `default` - Use `Default::default` value if field is not present
 * `default = $expr` - Specifies expression used to initialize the value when it's not present in config
-* `default_parse = $str` - Shorthand for`default = "$str".parse().unwrap()`
+* `default_str = "$str"` - Shorthand for`default = "$str".parse().unwrap()`
+* `combine(keep | replace | merge)` - Allows overriding how values are combined across different config files
+  * Possible values:
+    * `keep` - keeps first seen value
+    * `replace` - fully replaces with the new value
+    * `merge` - merges object keys and concatenates arrays, merge is smart and will not merge values across different enums
+  * Default behavior:
+    * `replace` for all known value types
+    * `merge` for unknown types
+      * You will need to implement `setty::combine::Combine` for it to work for custom types
+      * `Config` derive macro automatically implements it for you
+      * If you don't want any merging - simply override to use `combine(replace)`
 
 ## Interaction with other attributes
 * `#[serde(...)]` attribute will be propagated and can be used to override default behaviour (e.g. `#[serde(tag = "type")]`)
+* `#[schemars(...)]` attribute will be propagated

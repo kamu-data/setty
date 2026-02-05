@@ -47,10 +47,10 @@ fmt-toml = ["figment2/toml"]
 fmt-json = ["figment2/json", "dep:serde_json"]
 fmt-yaml = ["figment2/yaml", "dep:serde_yaml"]
 
-type-bigdecimal04 = ["schemars/bigdecimal04"]
-type-chrono04 = ["schemars/chrono04"]
+type-bigdecimal04 = ["schemars/bigdecimal04", "dep:bigdecimal"]
+type-chrono04 = ["schemars/chrono04", "dep:chrono"]
 type-duration-string05 = ["dep:duration-string"]
-type-url2 = ["schemars/url2"]
+type-url2 = ["schemars/url2", "dep:url"]
 
 gen-jsonschema = ["derive-jsonschema"]
 gen-markdown = ["derive-jsonschema"]
@@ -66,6 +66,11 @@ serde = { version = "1", default-features = false, features = ["derive"] }
 thiserror = { version = "2", default-features = false }
 
 # Optional
+bigdecimal = { optional = true, version = "0.4", default-features = false }
+chrono = { optional = true, version = "0.4", default-features = false, features = [
+    "alloc",
+] }
+
 duration-string = { optional = true, version = "0.5", default-features = false, features = [
     "serde",
 ] }
@@ -75,6 +80,7 @@ serde_with = { optional = true, version = "3", default-features = false, feature
     "macros",
 ] }
 serde_yaml = { optional = true, package = "serde_norway", version = "0.9", default-features = false }
+url = { optional = true, version = "2", default-features = false }
 
 
 [dev-dependencies]

@@ -1,3 +1,5 @@
+#![cfg(feature = "type-duration-string05")]
+
 use duration_string as ds;
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -57,8 +59,7 @@ impl From<std::time::Duration> for DurationString {
 
 impl From<DurationString> for String {
     fn from(value: DurationString) -> Self {
-        let ds = ds::DurationString::new(value.0);
-        ds.to_string()
+        value.to_string()
     }
 }
 
@@ -125,5 +126,9 @@ impl schemars::JsonSchema for DurationString {
         String::json_schema(generator)
     }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+impl crate::combine::Combine for DurationString {}
 
 /////////////////////////////////////////////////////////////////////////////////////////

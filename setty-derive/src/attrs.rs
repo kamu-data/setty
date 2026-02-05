@@ -6,8 +6,41 @@ use syn::spanned::Spanned;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+#[derive(Debug)]
+pub(crate) enum Combine {
+    Keep,
+    Replace,
+    Merge,
+}
+
+impl Combine {
+    pub fn to_str_lit(&self) -> syn::LitStr {
+        let s = format!("{self:?}").to_lowercase();
+        syn::LitStr::new(&s, Span::call_site())
+    }
+}
+
+impl syn::parse::Parse for Combine {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let ident: syn::Ident = input.parse()?;
+        let ident = ident.to_string();
+        match ident.as_str() {
+            "keep" => Ok(Self::Keep),
+            "replace" => Ok(Self::Replace),
+            "merge" => Ok(Self::Merge),
+            _ => Err(syn::Error::new(
+                input.span(),
+                r#"combine accepts: `keep` `replace` `merge`"#,
+            )),
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
 pub(crate) struct ConfigFieldOpts {
     pub default: Option<Option<syn::Expr>>,
+    pub combine: Option<Combine>,
     pub span: Span,
 }
 
@@ -15,47 +48,45 @@ impl ConfigFieldOpts {
     fn new(span: Span) -> Self {
         Self {
             default: None,
+            combine: None,
             span,
         }
     }
 
     pub fn merge(&mut self, other: Self) -> syn::Result<()> {
+        self.default = other.default;
+        self.combine = other.combine;
         self.span = other.span;
-
-        if other.default.is_some() {
-            if self.default.is_some() {
-                return Err(syn::Error::new(
-                    other.span,
-                    "`default` specified more than once",
-                ));
-            }
-            self.default = other.default;
-        }
-
         Ok(())
     }
 
     pub fn extract_from(field: &mut syn::Field) -> syn::Result<Self> {
+        let opts = Self::parse_from(field)?;
+
+        field.attrs.retain(|attr| !attr.path().is_ident("config"));
+
+        Ok(opts)
+    }
+
+    pub fn parse_from(field: &syn::Field) -> syn::Result<Self> {
         let mut opts = Self::new(proc_macro2::Span::call_site());
 
         for attr in field.attrs.iter() {
             if attr.path().is_ident("config") {
-                let more_opts = Self::parse_from(attr)?;
+                let more_opts = Self::parse(attr)?;
                 opts.merge(more_opts)?;
             }
         }
 
-        field.attrs.retain(|attr| !attr.path().is_ident("config"));
-
         // Provide a default for `Option<T>`
-        if opts.default.is_none() && is_option(&field.ty) {
+        if opts.default.is_none() && type_matches(&field.ty, "::std::option::Option") {
             opts.default = Some(None);
         }
 
         Ok(opts)
     }
 
-    fn parse_from(attr: &syn::Attribute) -> syn::Result<Self> {
+    fn parse(attr: &syn::Attribute) -> syn::Result<Self> {
         let mut opts = Self::new(attr.span());
 
         attr.parse_nested_meta(|meta| {
@@ -80,6 +111,11 @@ impl ConfigFieldOpts {
                 let lit: syn::LitStr = meta.value()?.parse()?;
                 let expr: syn::Expr = syn::parse_quote!(#lit.parse().unwrap());
                 opts.default = Some(Some(expr));
+            } else if meta.path.is_ident("combine") {
+                let content;
+                syn::parenthesized!(content in meta.input);
+                let combine: Combine = content.parse()?;
+                opts.combine = Some(combine);
             } else {
                 return Err(syn::Error::new(
                     meta.path.span(),
@@ -209,21 +245,19 @@ impl SerdeFieldOpts {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-pub(crate) fn is_option(typ: &syn::Type) -> bool {
-    let syn::Type::Path(typ) = typ else {
-        panic!("Expected a Type::Path");
-    };
-
-    typ.qself.is_none() && &typ.path.segments.last().unwrap().ident == "Option"
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
 // TODO: Consider performance of this
 pub(crate) fn path_matches(p: &syn::Path, other: &str) -> bool {
     let other: syn::Path = syn::parse_str(other).unwrap();
 
     p.segments.last().unwrap().ident == other.segments.last().unwrap().ident
+}
+
+pub(crate) fn type_matches(typ: &syn::Type, other: &str) -> bool {
+    let syn::Type::Path(typ) = typ else {
+        panic!("Expected a Type::Path");
+    };
+
+    path_matches(&typ.path, other)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
