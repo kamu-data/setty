@@ -310,6 +310,57 @@ fn test_default() {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #[test]
+fn test_serde_enum_mixed() {
+    #[derive(setty::Config)]
+    struct A {
+        b: B,
+    }
+
+    #[derive(setty::Config)]
+    enum B {
+        Foo,
+        Bar(C),
+    }
+
+    #[derive(setty::Config)]
+    struct C {
+        x: u32,
+    }
+
+    let cfg: A = setty::Config::new()
+        .with_source_str::<setty::format::Yaml>(
+            r#"
+            b:
+                kind: foo
+            "#,
+        )
+        .extract()
+        .unwrap();
+
+    assert_eq!(cfg, A { b: B::Foo });
+
+    let cfg: A = setty::Config::new()
+        .with_source_str::<setty::format::Yaml>(
+            r#"
+            b:
+                kind: bar
+                x: 42
+            "#,
+        )
+        .extract()
+        .unwrap();
+
+    assert_eq!(
+        cfg,
+        A {
+            b: B::Bar(C { x: 42 })
+        }
+    );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#[test]
 fn test_serde_rename_unit() {
     #[derive(setty::Config)]
     struct A {

@@ -1,16 +1,15 @@
 # setty - opitionated application config
 `setty` is a facade over several configuration libraries providing **turn-key config system with sane defaults**.
 
-## Problem
+## Motivation
 Popular configuration crates like `config` and `figment` deal with **reading** and **merging** values from multiple sources. They leave it up to you to handle **parsing** using `serde` derives. This is a good separation of concerns, but it leaves a lot of important details to you. Like remembering to put `#[serde(deny_unknown_fields)]` not to realize that your production config had no effect because of a small typo.
 
 Also, you may need features beyond parsing:
-- Consistent defaults between `Default::default()` and deserialization
-- Per-field combine strategies *(e.g. keep first value, replace with latest, merge arrays)*
 - Documentation generation
 - JSONSchema generation *(e.g. for Helm chart values validation)*
 - Auto-completion in CLI
 - Deprecation mechanism
+- Per-field combine strategies *(e.g. keep first value, replace with latest, merge arrays)*
 
 Layering more libraries and macros makes your models **very verbose**:
 
@@ -57,7 +56,7 @@ impl AppConfig {
 }
 ```
 
-And even if you power through this problem in your application - you'll face a **composability** problem of surfacing configuration from the modules you depend on. If a config object defined in a module does not use your ideal set of derive macros - you'll be forced to deplicating its structure in a temporary DTO and writing a mapping between them. Yet more boilerplate.
+And even if you power through this problem in your application - you'll face a **composability** problem - how to surface configuration from the sub-modules you depend on in your app config. If a config types defined in a module do not use your ideal set of derive macros - you'll be forced to define a temporary DTO and write lots of mapping logic... yet more boilerplate!
 
 ## Solution
 Use one simple macro:
@@ -75,6 +74,7 @@ struct AppConfig {
     database: DatabaseConfig,
 
     /// Or specify default values in-line (support full expressions)
+    /// This default will be consistent between `Default::default()`, `serde(default)`, and `schemars`
     #[config(default = "localhost")]
     /// Basic validation can be delegated to `serde_valid` crate
     #[config(validate(min_length = 5))]

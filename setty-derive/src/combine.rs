@@ -111,8 +111,13 @@ pub(crate) fn combine_impl(input: &syn::DeriveInput) -> syn::Result<TokenStream>
             for var in &item.variants {
                 let tag_aliases = enum_tag_aliases(var);
 
-                let syn::Fields::Unnamed(fields) = &var.fields else {
-                    unreachable!("Expected unnamed enum variant V(T)");
+                let fields = match &var.fields {
+                    syn::Fields::Named(_) => unreachable!("Expected unnamed enum variant V(T)"),
+                    syn::Fields::Unnamed(v) => v,
+                    syn::Fields::Unit => {
+                        // Mixing unit and unnamed is OK - nothing to do for unit
+                        continue;
+                    }
                 };
 
                 // TODO: Serde aliases
