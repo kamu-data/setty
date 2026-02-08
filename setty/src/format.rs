@@ -4,7 +4,7 @@ pub trait Format {
     type ErrorDe: std::error::Error + 'static;
     type ErrorSer: std::error::Error + 'static;
 
-    fn name() -> &'static str;
+    fn name() -> std::borrow::Cow<'static, str>;
 
     fn deserialize<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::ErrorDe>;
 
@@ -21,8 +21,8 @@ impl Format for Json {
     type ErrorDe = serde_json::Error;
     type ErrorSer = serde_json::Error;
 
-    fn name() -> &'static str {
-        "json"
+    fn name() -> std::borrow::Cow<'static, str> {
+        "json".into()
     }
 
     fn deserialize<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::ErrorDe> {
@@ -44,8 +44,8 @@ impl Format for Yaml {
     type ErrorDe = serde_yaml::Error;
     type ErrorSer = serde_yaml::Error;
 
-    fn name() -> &'static str {
-        "yaml"
+    fn name() -> std::borrow::Cow<'static, str> {
+        "yaml".into()
     }
 
     fn deserialize<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::ErrorDe> {
@@ -67,8 +67,8 @@ impl Format for Toml {
     type ErrorDe = toml::de::Error;
     type ErrorSer = toml::ser::Error;
 
-    fn name() -> &'static str {
-        "toml"
+    fn name() -> std::borrow::Cow<'static, str> {
+        "toml".into()
     }
 
     fn deserialize<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::ErrorDe> {

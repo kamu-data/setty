@@ -5,7 +5,7 @@ default-members = ["setty", "setty-derive"]
 
 
 [workspace.package]
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 readme = "README.md"
 homepage = "https://github.com/kamu-data/setty"
@@ -54,4 +54,4 @@ multiple_crate_versions = { level = "allow", priority = 1 }
 
 
 [workspace.dependencies]
-setty-derive = { path = "setty-derive", version = "0.3.0" }
+setty-derive = { path = "setty-derive", version = "0.3.1" }
