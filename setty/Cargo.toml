@@ -84,7 +84,9 @@ toml = { optional = true, version = "0.9", default-features = false, features = 
     "parse",
     "display",
 ] }
-url = { optional = true, version = "2", default-features = false }
+url = { optional = true, version = "2", default-features = false, features = [
+    "std",
+] }
 
 
 [dev-dependencies]

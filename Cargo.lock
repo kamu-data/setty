@@ -583,7 +583,7 @@ dependencies = [
 
 [[package]]
 name = "setty"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -604,7 +604,7 @@ dependencies = [
 
 [[package]]
 name = "setty-derive"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -754,6 +754,7 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]
