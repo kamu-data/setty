@@ -44,6 +44,7 @@ case-enums-any = ["setty-derive/case-enums-any"]
 
 fmt-toml = ["dep:toml"]
 fmt-json = []
+fmt-json-arbitrary-precision = ["fmt-json", "serde_json/arbitrary_precision"]
 fmt-yaml = ["dep:serde_yaml"]
 
 types-bigdecimal = ["schemars/bigdecimal04", "dep:bigdecimal"]
@@ -62,7 +63,11 @@ serde = { version = "1", default-features = false, features = [
     "alloc",
     "derive",
 ] }
-serde_json = { version = "1", default-features = false, features = ["std"] }
+serde_json = { version = "1", default-features = false, features = [
+    "std",
+    "alloc",
+    "arbitrary_precision",
+] }
 thiserror = { version = "2", default-features = false }
 
 # Optional
@@ -77,7 +82,7 @@ schemars = { optional = true, version = "1", default-features = false }
 serde_with = { optional = true, version = "3", default-features = false, features = [
     "macros",
 ] }
-serde_yaml = { optional = true, package = "serde_norway", version = "0.9", default-features = false }
+serde_yaml = { optional = true, package = "serde_yaml_ng", version = "0.10", default-features = false }
 toml = { optional = true, version = "0.9", default-features = false, features = [
     "std",
     "serde",

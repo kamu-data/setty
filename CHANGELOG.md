@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.5] - 2026-02-08
+### Changed
+- Use `serde_yaml_ng` instead of `serde_norway` as better maintained (and named) option
+### Fixed
+- Added `fmt-json-arbitrary-precision` feature that enables the YAML compatibility workaround when serializing
+
 ## [0.3.4] - 2026-02-08
 ### Added
 - New `UrlOrPath` helper type

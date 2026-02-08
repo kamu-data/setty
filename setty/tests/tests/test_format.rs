@@ -82,6 +82,47 @@ fn test_format_yaml() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+// Test to ensure we don't emit the dreaded `$serde_json::private::Number`
+#[cfg(feature = "fmt-json")]
+#[cfg(feature = "fmt-yaml")]
+#[test]
+fn test_format_yaml_to_json_precision() {
+    use setty::format::Format;
+
+    #[derive(setty::Config)]
+    struct Cfg {
+        num: usize,
+    }
+
+    let data = setty::Config::<Cfg>::new()
+        .with_source(setty::source::RawData::<setty::format::Yaml>::new(
+            "num: 42",
+        ))
+        .data(false)
+        .unwrap();
+
+    pretty_assertions::assert_eq!(
+        setty::format::JsonPretty::serialize(&data).unwrap(),
+        indoc::indoc!(
+            r#"
+            {
+              "num": 42
+            }"#
+        ),
+    );
+
+    pretty_assertions::assert_eq!(
+        setty::format::Yaml::serialize(&data).unwrap(),
+        indoc::indoc!(
+            r#"
+            num: 42
+            "#
+        ),
+    );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
 #[cfg(feature = "fmt-toml")]
 #[test]
 fn test_format_toml() {

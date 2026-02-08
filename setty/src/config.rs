@@ -221,7 +221,6 @@ where
     Cfg: Combine,
 {
     /// Returns raw merged data
-    #[cfg(feature = "derive-jsonschema")]
     pub fn data(&self, with_defaults: bool) -> Result<Value, ReadError> {
         let mut value = self.data_combined(None)?;
 
@@ -246,7 +245,6 @@ where
     }
 
     /// Returns value under specified path
-    #[cfg(feature = "derive-jsonschema")]
     pub fn get_value(&self, path: &str, with_defaults: bool) -> Result<Option<Value>, ReadError> {
         let data = self.data(with_defaults)?;
         Ok(Self::find_value(path, data))
