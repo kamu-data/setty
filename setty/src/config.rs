@@ -53,6 +53,17 @@ where
         self
     }
 
+    pub fn with_sources<I, S>(mut self, sources: I) -> Self
+    where
+        S: Source + 'static,
+        I: IntoIterator<Item = S>,
+    {
+        for source in sources {
+            self = self.with_source(source);
+        }
+        self
+    }
+
     /// Deserializes the marged config into the config type
     pub fn extract(&self) -> Result<Cfg, ReadError> {
         let value = self.data_combined(None)?;
