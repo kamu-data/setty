@@ -1,27 +1,35 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 pub trait Format {
-    type Error: std::error::Error;
+    type ErrorDe: std::error::Error + 'static;
+    type ErrorSer: std::error::Error + 'static;
 
-    fn deserialize<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::Error>;
+    fn name() -> &'static str;
 
-    fn serialize<T: serde::ser::Serialize>(value: &T) -> Result<String, Self::Error>;
+    fn deserialize<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::ErrorDe>;
+
+    fn serialize<T: serde::ser::Serialize>(value: &T) -> Result<String, Self::ErrorSer>;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #[cfg(feature = "fmt-json")]
-pub use figment2::providers::Json;
+pub struct Json;
 
 #[cfg(feature = "fmt-json")]
-impl Format for figment2::providers::Json {
-    type Error = serde_json::Error;
+impl Format for Json {
+    type ErrorDe = serde_json::Error;
+    type ErrorSer = serde_json::Error;
 
-    fn deserialize<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::Error> {
+    fn name() -> &'static str {
+        "json"
+    }
+
+    fn deserialize<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::ErrorDe> {
         serde_json::from_str(string)
     }
 
-    fn serialize<T: serde::ser::Serialize>(value: &T) -> Result<String, Self::Error> {
+    fn serialize<T: serde::ser::Serialize>(value: &T) -> Result<String, Self::ErrorSer> {
         serde_json::to_string(value)
     }
 }
@@ -29,18 +37,46 @@ impl Format for figment2::providers::Json {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #[cfg(feature = "fmt-yaml")]
-pub use figment2::providers::Yaml;
+pub struct Yaml;
 
 #[cfg(feature = "fmt-yaml")]
-impl Format for figment2::providers::Yaml {
-    type Error = serde_yaml::Error;
+impl Format for Yaml {
+    type ErrorDe = serde_yaml::Error;
+    type ErrorSer = serde_yaml::Error;
 
-    fn deserialize<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::Error> {
+    fn name() -> &'static str {
+        "yaml"
+    }
+
+    fn deserialize<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::ErrorDe> {
         serde_yaml::from_str(string)
     }
 
-    fn serialize<T: serde::ser::Serialize>(value: &T) -> Result<String, Self::Error> {
+    fn serialize<T: serde::ser::Serialize>(value: &T) -> Result<String, Self::ErrorSer> {
         serde_yaml::to_string(value)
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#[cfg(feature = "fmt-toml")]
+pub struct Toml;
+
+#[cfg(feature = "fmt-toml")]
+impl Format for Toml {
+    type ErrorDe = toml::de::Error;
+    type ErrorSer = toml::ser::Error;
+
+    fn name() -> &'static str {
+        "toml"
+    }
+
+    fn deserialize<T: serde::de::DeserializeOwned>(string: &str) -> Result<T, Self::ErrorDe> {
+        toml::from_str(string)
+    }
+
+    fn serialize<T: serde::ser::Serialize>(value: &T) -> Result<String, Self::ErrorSer> {
+        toml::to_string(value)
     }
 }
 

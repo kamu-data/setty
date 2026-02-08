@@ -1,7 +1,11 @@
-# setty - opitionated application config
-`setty` is a facade over several configuration libraries providing **turn-key config system with sane defaults**.
+# setty
+`setty` is an opinionated configuration crate.
 
-## Motivation
+It can be used by:
+- Applications - to load and merge config from multiple sources and formats and generate documentation and JSON Schema
+- Libraries - to define their own config DTOs without needing to anticipate or align application-level config format and style preferences
+
+## Problem Statement
 Popular configuration crates like `config` and `figment` deal with **reading** and **merging** values from multiple sources. They leave it up to you to handle **parsing** using `serde` derives. This is a good separation of concerns, but it leaves a lot of important details to you. Like remembering to put `#[serde(deny_unknown_fields)]` not to realize that your production config had no effect because of a small typo.
 
 Also, you may need features beyond parsing:
@@ -62,12 +66,7 @@ And even if you power through this problem in your application - you'll face a *
 Use one simple macro:
 ```rust
 /// Docstrings will appear in Markdown and JSON Schema outputs
-#[derive(
-    // Implements all serde and schema stuff
-    setty::Config,
-    // Reuses same defaults to implement `Default` trait 
-    setty::Default,
-)]
+#[derive(setty::Config)]
 struct AppConfig {
     /// Opt-in into using `Default::default`
     #[config(default)]
@@ -124,6 +123,11 @@ setty = {
         # Pick generation target formats
         "gen-jsonschema",
         "gen-markdown",
+        # Extra types support
+        "types-bigdecimal",
+        "types-chrono",
+        "types-duration-string",
+        "types-url",
     ]
 }
 ```
@@ -139,7 +143,7 @@ By specifying features **only** at the top-level application crate - the desired
 
 ## Derive Macros
 * `Config` - main workhorse
-* `Debug` - same as `std::Debug` but recognizes defaults provided via `#[config(default = $expr)]` attributes
+* `Default` - same as `std::Default` but recognizes defaults provided via `#[config(default = $expr)]` attributes
 
 ## Field Attributes
 These arguments can be specified in `#[config(...)]` field attribute:

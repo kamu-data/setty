@@ -1,5 +1,7 @@
 #![cfg(feature = "derive-deserialize")]
 
+use serde_json::json;
+
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #[derive(setty::Config, setty::Default)]
@@ -62,202 +64,120 @@ pub enum EncryptionAlgo {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-fn get_config_figment() -> figment2::Figment {
-    use figment2::providers::{Env, Format, Yaml};
-
-    figment2::Figment::new()
-        .merge(Yaml::file(".kamu/config.yaml"))
-        .merge(Env::prefixed("KAMU_CFG_").split("__").lowercase(false))
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
 #[test]
-#[serial_test::serial]
 fn test_defaults() {
-    setty::test::Jail::expect_with(|_| {
-        let cfg: MyConfig = get_config_figment().extract()?;
+    let cfg: MyConfig = setty::Config::new().extract().unwrap();
 
-        assert_eq!(
-            cfg,
-            MyConfig {
-                database: DatabaseConfig::default(),
-                encryption: None,
-            }
-        );
-        Ok(())
-    });
+    assert_eq!(
+        cfg,
+        MyConfig {
+            database: DatabaseConfig::default(),
+            encryption: None,
+        }
+    );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-#[serial_test::serial]
 fn test_empty_config() {
-    setty::test::Jail::expect_with(|j| {
-        j.create_dir(".kamu")?;
-        j.create_file(".kamu/config.yaml", r#""#)?;
+    let cfg: MyConfig = setty::Config::new()
+        .with_source(json!({}))
+        .extract()
+        .unwrap();
 
-        let cfg: MyConfig = get_config_figment().extract()?;
-
-        assert_eq!(
-            cfg,
-            MyConfig {
-                database: DatabaseConfig::default(),
-                encryption: None,
-            }
-        );
-        Ok(())
-    });
+    assert_eq!(
+        cfg,
+        MyConfig {
+            database: DatabaseConfig::default(),
+            encryption: None,
+        }
+    );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-#[serial_test::serial]
 fn test_one_config() {
-    setty::test::Jail::expect_with(|j| {
-        j.create_dir(".kamu")?;
-        j.create_file(
-            ".kamu/config.yaml",
-            indoc::indoc!(
-                r#"
-                database:
-                    kind: Postgres
-                    schema_name: foo
-                "#
-            ),
-        )?;
-
-        let cfg: MyConfig = get_config_figment().extract()?;
-
-        assert_eq!(
-            cfg,
-            MyConfig {
-                database: DatabaseConfig::Postgres(PostgresDatabaseConfig {
-                    schema_name: "foo".into(),
-                    host: "localhost".into(),
-                }),
-                encryption: None,
+    let cfg: MyConfig = setty::Config::new()
+        .with_source(json!({
+            "database": {
+                "kind": "Postgres",
+                "schema_name": "foo",
             }
-        );
-        Ok(())
-    });
+        }))
+        .extract()
+        .unwrap();
+
+    assert_eq!(
+        cfg,
+        MyConfig {
+            database: DatabaseConfig::Postgres(PostgresDatabaseConfig {
+                schema_name: "foo".into(),
+                host: "localhost".into(),
+            }),
+            encryption: None,
+        }
+    );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-#[serial_test::serial]
-fn test_env_var_override_nested() {
-    setty::test::Jail::expect_with(|j| {
-        // Note: Lowercase `postgres` works because of `case-enums-any` feature
-        j.set_env("KAMU_CFG_database__kind", "postgres");
-        j.set_env("KAMU_CFG_database__schema_name", "bar");
-
-        let cfg: MyConfig = get_config_figment().extract()?;
-
-        assert_eq!(
-            cfg,
-            MyConfig {
-                database: DatabaseConfig::Postgres(PostgresDatabaseConfig {
-                    schema_name: "bar".into(),
-                    host: "localhost".into(),
-                }),
-                encryption: None,
-            }
-        );
-        Ok(())
-    });
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-#[test]
-#[serial_test::serial]
 fn test_unrecognized_field_rejected() {
-    setty::test::Jail::expect_with(|j| {
-        j.create_dir(".kamu")?;
-        j.create_file(
-            ".kamu/config.yaml",
-            indoc::indoc!(
-                r#"
-                database:
-                    kind: Postgres
-                    schema_namez: foo
-                "#
-            ),
-        )?;
+    let err = setty::Config::<MyConfig>::new()
+        .with_source(json!({
+            "database": {
+                "kind": "Postgres",
+                "schema_namez": "foo",
+            }
+        }))
+        .extract()
+        .expect_err("Expected error");
 
-        let err = get_config_figment()
-            .extract::<MyConfig>()
-            .expect_err("Expected error");
-
-        assert_eq!(
-            err.kind,
-            figment2::error::Kind::UnknownField("schema_namez".into(), &["schema_name", "host"])
-        );
-        assert_eq!(err.path, ["database"]);
-        Ok(())
-    });
+    pretty_assertions::assert_eq!(
+        err.to_string(),
+        "unknown field `schema_namez`, expected `schema_name` or `host`"
+    );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-#[serial_test::serial]
 fn test_required_field() {
     // Required field missing
-    setty::test::Jail::expect_with(|j| {
-        j.create_dir(".kamu")?;
-        j.create_file(
-            ".kamu/config.yaml",
-            indoc::indoc!(
-                r#"
-                encryption:
-                    algo: Rsa
-                "#
-            ),
-        )?;
+    let err = setty::Config::<MyConfig>::new()
+        .with_source(json!({
+            "encryption": {
+                "algo": "Rsa",
+            }
+        }))
+        .extract()
+        .expect_err("Expected error");
 
-        let err = get_config_figment()
-            .extract::<MyConfig>()
-            .expect_err("Expected error");
-
-        assert_eq!(err.kind, figment2::error::Kind::MissingField("key".into()));
-        assert_eq!(err.path, ["encryption"]);
-
-        Ok(())
-    });
+    pretty_assertions::assert_eq!(err.to_string(), "missing field `key`");
 
     // Required field present
-    setty::test::Jail::expect_with(|j| {
-        j.create_dir(".kamu")?;
-        j.create_file(
-            ".kamu/config.yaml",
-            indoc::indoc!(
-                r#"
-                encryption:
-                    key: secret
-                    algo: Rsa
-                "#
-            ),
-        )?;
-
-        let cfg: MyConfig = get_config_figment().extract()?;
-
-        assert_eq!(
-            cfg,
-            MyConfig {
-                database: DatabaseConfig::default(),
-                encryption: Some(EncryptionConfig {
-                    key: "secret".into(),
-                    algo: EncryptionAlgo::Rsa
-                }),
+    let cfg: MyConfig = setty::Config::new()
+        .with_source(json!({
+            "encryption": {
+                "algo": "Rsa",
+                "key": "secret",
             }
-        );
-        Ok(())
-    });
+        }))
+        .extract()
+        .unwrap();
+
+    assert_eq!(
+        cfg,
+        MyConfig {
+            database: DatabaseConfig::default(),
+            encryption: Some(EncryptionConfig {
+                key: "secret".into(),
+                algo: EncryptionAlgo::Rsa
+            }),
+        }
+    );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -295,7 +215,7 @@ fn test_default() {
         }
     );
 
-    let cfg: Config = figment2::Figment::new().extract().unwrap();
+    let cfg: Config = setty::Config::new().extract().unwrap();
     assert_eq!(
         cfg,
         Config {
@@ -328,25 +248,23 @@ fn test_serde_enum_mixed() {
     }
 
     let cfg: A = setty::Config::new()
-        .with_source_str::<setty::format::Yaml>(
-            r#"
-            b:
-                kind: foo
-            "#,
-        )
+        .with_source(json!({
+            "b": {
+                "kind": "foo",
+            }
+        }))
         .extract()
         .unwrap();
 
     assert_eq!(cfg, A { b: B::Foo });
 
     let cfg: A = setty::Config::new()
-        .with_source_str::<setty::format::Yaml>(
-            r#"
-            b:
-                kind: bar
-                x: 42
-            "#,
-        )
+        .with_source(json!({
+            "b": {
+                "kind": "bar",
+                "x": 42,
+            }
+        }))
         .extract()
         .unwrap();
 
@@ -377,7 +295,7 @@ fn test_serde_rename_unit() {
 
     // Setty will consider new name `Baz` and apply the case aliases to it, not to `Bar`
     let cfg: A = setty::Config::new()
-        .with_source_str::<setty::format::Yaml>(r#"b: baz"#)
+        .with_source(json!({ "b": "baz" }))
         .extract()
         .unwrap();
 
@@ -407,12 +325,11 @@ fn test_serde_rename_enum() {
 
     // Setty will consider new name `Baz` and apply the case aliases to it, not to `Bar`
     let cfg: A = setty::Config::new()
-        .with_source_str::<setty::format::Yaml>(
-            r#"
-            b:
-                type: baz
-            "#,
-        )
+        .with_source(json!({
+            "b": {
+                "type": "baz",
+            }
+        }))
         .extract()
         .unwrap();
 
@@ -420,12 +337,11 @@ fn test_serde_rename_enum() {
 
     // Setty will generate case permutations for alias as well
     let cfg: A = setty::Config::new()
-        .with_source_str::<setty::format::Yaml>(
-            r#"
-            b:
-                type: foobar
-            "#,
-        )
+        .with_source(json!({
+            "b": {
+                "type": "foobar",
+            }
+        }))
         .extract()
         .unwrap();
 

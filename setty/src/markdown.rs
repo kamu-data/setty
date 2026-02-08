@@ -1,5 +1,6 @@
 #![cfg(feature = "derive-jsonschema")]
 
+use crate::Value;
 use std::fmt::Write;
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -24,11 +25,7 @@ pub fn schema_to_markdown(schema: &schemars::Schema) -> String {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-fn write_type(
-    buf: &mut String,
-    name: &str,
-    schema: &serde_json::Value,
-) -> Result<(), std::fmt::Error> {
+fn write_type(buf: &mut String, name: &str, schema: &Value) -> Result<(), std::fmt::Error> {
     writeln!(buf, "## `{name}`")?;
     writeln!(buf)?;
 
@@ -58,11 +55,7 @@ fn write_type(
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-fn write_struct(
-    buf: &mut String,
-    name: &str,
-    schema: &serde_json::Value,
-) -> Result<(), std::fmt::Error> {
+fn write_struct(buf: &mut String, name: &str, schema: &Value) -> Result<(), std::fmt::Error> {
     let empty = serde_json::Map::default();
     let properties = schema
         .get("properties")
@@ -128,11 +121,7 @@ fn write_struct(
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-fn write_enum(
-    buf: &mut String,
-    name: &str,
-    schema: &serde_json::Value,
-) -> Result<(), std::fmt::Error> {
+fn write_enum(buf: &mut String, name: &str, schema: &Value) -> Result<(), std::fmt::Error> {
     let Some(variants) = schema.get("oneOf").and_then(|p| p.as_array()) else {
         unreachable!()
     };
@@ -166,11 +155,7 @@ fn write_enum(
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-fn write_string_enum(
-    buf: &mut String,
-    _name: &str,
-    schema: &serde_json::Value,
-) -> Result<(), std::fmt::Error> {
+fn write_string_enum(buf: &mut String, _name: &str, schema: &Value) -> Result<(), std::fmt::Error> {
     writeln!(buf, "| Variants |")?;
     writeln!(buf, "|---|")?;
 
@@ -186,7 +171,7 @@ fn write_string_enum(
 fn write_basic_type_wrapper(
     buf: &mut String,
     _name: &str,
-    schema: &serde_json::Value,
+    schema: &Value,
 ) -> Result<(), std::fmt::Error> {
     let typ = schema.get("type").and_then(|p| p.as_str()).unwrap();
     writeln!(buf, "Base type: `{typ}`")?;

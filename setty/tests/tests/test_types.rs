@@ -1,9 +1,10 @@
 #![cfg(feature = "fmt-yaml")]
 
+use serde_json::json;
+
 /////////////////////////////////////////////////////////////////////////////////////////
 
-use setty::format::Yaml;
-
+#[cfg(feature = "types-chrono")]
 #[test]
 fn test_rfc3339() {
     #[derive(setty::Config)]
@@ -13,11 +14,9 @@ fn test_rfc3339() {
 
     //
     let cfg: Cfg = setty::Config::new()
-        .with_source_str::<Yaml>(
-            r#"
-            dt: 1996-12-19T16:39:57-08:00
-            "#,
-        )
+        .with_source(json!({
+            "dt": "1996-12-19T16:39:57-08:00",
+        }))
         .extract()
         .unwrap();
 

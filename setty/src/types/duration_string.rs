@@ -1,4 +1,4 @@
-#![cfg(feature = "type-duration-string05")]
+#![cfg(feature = "types-duration-string")]
 
 use duration_string as ds;
 

@@ -1,7 +1,9 @@
+use crate::Value;
+
 /////////////////////////////////////////////////////////////////////////////////////////
 
 pub trait Combine {
-    fn merge(lhs: &mut serde_json::Value, rhs: serde_json::Value) {
+    fn merge(lhs: &mut Value, rhs: Value) {
         // Default is `replace`
         *lhs = rhs;
     }
@@ -10,9 +12,9 @@ pub trait Combine {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 impl<T> Combine for Vec<T> {
-    fn merge(lhs: &mut serde_json::Value, rhs: serde_json::Value) {
+    fn merge(lhs: &mut Value, rhs: Value) {
         let mut rhs = match rhs {
-            serde_json::Value::Array(v) => v,
+            Value::Array(v) => v,
             _ => {
                 *lhs = rhs;
                 return;
@@ -28,9 +30,9 @@ impl<T> Combine for Vec<T> {
 }
 
 impl<T> Combine for std::collections::BTreeMap<String, T> {
-    fn merge(lhs: &mut serde_json::Value, rhs: serde_json::Value) {
+    fn merge(lhs: &mut Value, rhs: Value) {
         let rhs = match rhs {
-            serde_json::Value::Object(v) => v,
+            Value::Object(v) => v,
             _ => {
                 *lhs = rhs;
                 return;
@@ -46,5 +48,9 @@ impl<T> Combine for std::collections::BTreeMap<String, T> {
         }
     }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+impl Combine for std::path::PathBuf {}
 
 /////////////////////////////////////////////////////////////////////////////////////////

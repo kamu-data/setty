@@ -42,26 +42,27 @@ case-enums-snake = ["setty-derive/case-enums-snake"]
 case-enums-kebab = ["setty-derive/case-enums-kebab"]
 case-enums-any = ["setty-derive/case-enums-any"]
 
-fmt-toml = ["figment2/toml"]
-fmt-json = ["figment2/json"]
-fmt-yaml = ["figment2/yaml", "dep:serde_yaml"]
+fmt-toml = ["dep:toml"]
+fmt-json = []
+fmt-yaml = ["dep:serde_yaml"]
 
-type-bigdecimal04 = ["schemars/bigdecimal04", "dep:bigdecimal"]
-type-chrono04 = ["schemars/chrono04", "dep:chrono"]
-type-duration-string05 = ["dep:duration-string"]
-type-url2 = ["schemars/url2", "dep:url"]
+types-bigdecimal = ["schemars/bigdecimal04", "dep:bigdecimal"]
+types-chrono = ["schemars/chrono04", "dep:chrono"]
+types-duration-string = ["dep:duration-string"]
+types-url = ["schemars/url2", "dep:url"]
 
 gen-jsonschema = ["derive-jsonschema"]
 gen-markdown = ["derive-jsonschema"]
 
-test = ["figment2/test"]
-
 
 [dependencies]
 setty-derive = { workspace = true }
-
-figment2 = { version = "0.11", default-features = false, features = [] }
-serde = { version = "1", default-features = false, features = ["derive"] }
+serde = { version = "1", default-features = false, features = [
+    "std",
+    "alloc",
+    "derive",
+] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
 thiserror = { version = "2", default-features = false }
 
 # Optional
@@ -69,21 +70,24 @@ bigdecimal = { optional = true, version = "0.4", default-features = false }
 chrono = { optional = true, version = "0.4", default-features = false, features = [
     "alloc",
 ] }
-
 duration-string = { optional = true, version = "0.5", default-features = false, features = [
     "serde",
 ] }
 schemars = { optional = true, version = "1", default-features = false }
-serde_json = { version = "1", features = [] }
 serde_with = { optional = true, version = "3", default-features = false, features = [
     "macros",
 ] }
 serde_yaml = { optional = true, package = "serde_norway", version = "0.9", default-features = false }
+toml = { optional = true, version = "0.9", default-features = false, features = [
+    "std",
+    "serde",
+    "parse",
+    "display",
+] }
 url = { optional = true, version = "2", default-features = false }
 
 
 [dev-dependencies]
-figment2 = { version = "0.11", default-features = false, features = ["test"] }
 indoc = "2"
-serial_test = "3"
+tempfile = { version = "3" }
 pretty_assertions = { version = "1" }
