@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 pub trait Format {
-    type ErrorDe: std::error::Error + 'static;
-    type ErrorSer: std::error::Error + 'static;
+    type ErrorDe: std::error::Error + Send + Sync + 'static;
+    type ErrorSer: std::error::Error + Send + Sync + 'static;
 
     fn name() -> std::borrow::Cow<'static, str>;
 

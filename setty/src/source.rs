@@ -18,7 +18,7 @@ pub trait Source {
 #[error(transparent)]
 pub enum ReadError {
     // TODO: Expand this to provide more error kinds
-    Serde(Box<dyn std::error::Error>),
+    Serde(Box<dyn std::error::Error + Send + Sync>),
     Io(#[from] std::io::Error),
 }
 
