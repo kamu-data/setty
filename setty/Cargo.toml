@@ -44,8 +44,11 @@ case-enums-any = ["setty-derive/case-enums-any"]
 
 fmt-toml = ["dep:toml"]
 fmt-json = []
-fmt-json-arbitrary-precision = ["fmt-json", "serde_json/arbitrary_precision"]
 fmt-yaml = ["dep:serde_yaml"]
+
+# Currently needed if you use serde_json with `arbitrary_precision` feature
+# See: https://github.com/acatton/serde-yaml-ng/issues/31
+fmt-yaml-arbitrary-precision-hack = []
 
 types-bigdecimal = ["schemars/bigdecimal04", "dep:bigdecimal"]
 types-chrono = ["schemars/chrono04", "dep:chrono"]
@@ -66,7 +69,6 @@ serde = { version = "1", default-features = false, features = [
 serde_json = { version = "1", default-features = false, features = [
     "std",
     "alloc",
-    "arbitrary_precision",
 ] }
 thiserror = { version = "2", default-features = false }
 

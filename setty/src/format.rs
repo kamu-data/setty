@@ -75,12 +75,12 @@ impl Format for Yaml {
         serde_yaml::from_str(string)
     }
 
-    #[cfg(not(feature = "fmt-json-arbitrary-precision"))]
+    #[cfg(not(feature = "fmt-yaml-arbitrary-precision-hack"))]
     fn serialize<T: serde::ser::Serialize>(value: &T) -> Result<String, Self::ErrorSer> {
         serde_yaml::to_string(value)
     }
 
-    #[cfg(feature = "fmt-json-arbitrary-precision")]
+    #[cfg(feature = "fmt-yaml-arbitrary-precision-hack")]
     fn serialize<T: serde::ser::Serialize>(value: &T) -> Result<String, Self::ErrorSer> {
         // To avoid outputting `$serde_json::private::Number` tag we resort to ugly transcoding
         // See: https://github.com/acatton/serde-yaml-ng/issues/31
