@@ -1,0 +1,74 @@
+{
+  "$defs": {
+    "DurationString": {
+      "type": "string"
+    },
+    "Mode": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Index in a single thread",
+          "properties": {
+            "kind": {
+              "const": "Serial",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Index in multiple threads",
+          "properties": {
+            "concurrency": {
+              "default": 10,
+              "description": "Maximum concurrent requests",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "kind": {
+              "const": "Parallel",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "connectionTimeout": {
+      "$ref": "#/$defs/DurationString",
+      "default": "15s",
+      "description": "Connection timeout"
+    },
+    "hosts": {
+      "combine": "merge",
+      "default": [],
+      "description": "List of hosts to index",
+      "items": {
+        "format": "uri",
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "mode": {
+      "$ref": "#/$defs/Mode",
+      "default": {
+        "kind": "Serial"
+      },
+      "description": "Indexing mode"
+    }
+  },
+  "title": "Cfg",
+  "type": "object"
+}

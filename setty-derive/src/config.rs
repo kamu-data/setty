@@ -39,6 +39,10 @@ pub(crate) fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStrea
         );
 
         input.attrs.push(syn::parse_quote! {
+            #[serde(crate = "::setty::__internal::serde")]
+        });
+
+        input.attrs.push(syn::parse_quote! {
             #[serde(deny_unknown_fields)]
         });
     }

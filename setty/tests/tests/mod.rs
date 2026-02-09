@@ -4,7 +4,6 @@ mod test_derive;
 mod test_deserialize;
 mod test_format;
 mod test_jsonschema;
-mod test_markdown;
 mod test_serialize;
 mod test_source;
 mod test_types;

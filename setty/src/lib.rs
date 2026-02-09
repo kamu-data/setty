@@ -3,6 +3,7 @@ mod config;
 pub mod format;
 mod markdown;
 mod merge_with_defaults;
+pub mod schema;
 pub mod source;
 pub mod types;
 

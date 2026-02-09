@@ -251,8 +251,8 @@ where
     }
 
     /// Returns JSON Schema describing the config type
-    pub fn json_schema(&self) -> schemars::Schema {
-        schemars::schema_for!(Cfg)
+    pub fn json_schema(&self) -> crate::schema::Schema {
+        schemars::schema_for!(Cfg).into()
     }
 
     /// Returns Markdown describing the config type

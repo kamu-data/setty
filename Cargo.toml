@@ -1,6 +1,6 @@
 [workspace]
-resolver = "2"
-members = ["setty", "setty-derive"]
+resolver = "3"
+members = ["setty", "setty-derive", "examples/jsonschema"]
 default-members = ["setty", "setty-derive"]
 
 
@@ -54,4 +54,5 @@ multiple_crate_versions = { level = "allow", priority = 1 }
 
 
 [workspace.dependencies]
+setty = { path = "setty", version = "0.3.6" }
 setty-derive = { path = "setty-derive", version = "0.3.6" }

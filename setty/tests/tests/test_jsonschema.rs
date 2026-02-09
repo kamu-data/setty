@@ -3,17 +3,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn test_json_schema_gen() {
-    use super::test_deserialize::MyConfig;
-
-    let schema = setty::Config::<MyConfig>::new().json_schema();
-    let schema = serde_json::to_string_pretty(&schema).unwrap();
-    std::fs::write("tests/tests/gen/jsonschema.json", schema).unwrap();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-#[test]
 fn test_json_schema_combine_attrs() {
     // Always derives Clone, deduplicating it with one from Config
     #[derive(setty::Config)]

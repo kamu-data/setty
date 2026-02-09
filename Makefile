@@ -25,3 +25,4 @@ lint-fix:
 .PHONY: test
 test:
 	cargo test -p setty --all-features
+	cargo run -p example-jsonschema

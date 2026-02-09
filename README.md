@@ -93,45 +93,42 @@ struct AppConfig {
 
 Control what behavior you need via create features:
 ```toml
-setty = { 
-    version = "*", 
-    features = [
-        # These traits will be derived for all types
-        "derive-clone",
-        "derive-debug",
-        "derive-partial-eq",
-        "derive-eq",
-        "derive-deserialize",
-        "derive-serialize",
-        "derive-jsonschema",
-        "derive-validate",
-        # Pick one: A case for struct fields (applies `#[serde(renameAll = "...")]`)
-        "case-fields-lower",
-        "case-fields-pascal",
-        "case-fields-camel",
-        "case-fields-snake",
-        "case-fields-kebab",
-        # Pick one: A case for enum variants (applies `#[serde(renameAll = "...")]`)
-        "case-enums-lower",
-        "case-enums-pascal",
-        "case-enums-camel",
-        "case-enums-snake",
-        "case-enums-kebab",
-        "case-enums-any", # Uses one of other cases on write but accepts any on read
-        # Pick input format(s)
-        "fmt-toml",
-        "fmt-json",
-        "fmt-yaml",
-        # Pick generation target formats
-        "gen-jsonschema",
-        "gen-markdown",
-        # Extra types support
-        "types-bigdecimal",
-        "types-chrono",
-        "types-duration-string",
-        "types-url",
-    ]
-}
+setty = { version = "*", features = [
+    # These traits will be derived for all types
+    "derive-clone",
+    "derive-debug",
+    "derive-partial-eq",
+    "derive-eq",
+    "derive-deserialize",
+    "derive-serialize",
+    "derive-jsonschema",
+    "derive-validate",
+    # Pick one: A case for struct fields (applies `#[serde(renameAll = "...")]`)
+    "case-fields-lower",
+    "case-fields-pascal",
+    "case-fields-camel",
+    "case-fields-snake",
+    "case-fields-kebab",
+    # Pick one: A case for enum variants (applies `#[serde(renameAll = "...")]`)
+    "case-enums-lower",
+    "case-enums-pascal",
+    "case-enums-camel",
+    "case-enums-snake",
+    "case-enums-kebab",
+    "case-enums-any", # Uses one of other cases on write but accepts any on read
+    # Pick input format(s)
+    "fmt-toml",
+    "fmt-json",
+    "fmt-yaml",
+    # Pick generation target formats
+    "gen-jsonschema",
+    "gen-markdown",
+    # Extra types support
+    "types-bigdecimal",
+    "types-chrono",
+    "types-duration-string",
+    "types-url",
+] }
 ```
 
 By specifying features **only** at the top-level application crate - the desired derives will be applied to configs of **all crates in your dependency tree** allowing you to directly embed their DTOs. In other words library developers don't have to predict and align every aspect of configuration with the app layer - they can focus only on DTO types.

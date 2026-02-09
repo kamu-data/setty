@@ -1,0 +1,8 @@
+connectionTimeout: 30s
+hosts:
+  - https://foo.com
+  - https://bar.com
+mode:
+  # Note: lowercase enum variant is accepted dure to `case-enums-any` feature
+  kind: parallel
+  concurrency: 100
