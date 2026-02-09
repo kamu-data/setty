@@ -161,6 +161,9 @@ let cfg: AppConfig = setty::Config::new()
 - Rolling your own declarative macros (see example in [`datafusion`](https://github.com/apache/datafusion/blob/b463a9f9e3c9603eb2db7113125fea3a1b7f5455/datafusion/common/src/config.rs#L2480))
 
 
+## Usage Examples
+See the [`examples`](https://github.com/kamu-data/setty/tree/master/examples) directory.
+
 ## API
 ### Proc Macros
 * `derive` - a replacement for standard `#[derive(...)]` macro that will de-duplicate derivations - this is most useful for e.g. `#[setty::derive(setty::Config, Clone)]` which allows type to implement `Clone` even when top-level feature `derive-clone` is disable, and not hit duplicate trait impl error when feature is enabled.

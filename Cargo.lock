@@ -184,7 +184,7 @@ dependencies = [
 
 [[package]]
 name = "example-jsonschema"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "color-eyre",
  "setty",
@@ -713,7 +713,7 @@ dependencies = [
 
 [[package]]
 name = "setty"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -734,7 +734,7 @@ dependencies = [
 
 [[package]]
 name = "setty-derive"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "proc-macro2",
  "quote",
