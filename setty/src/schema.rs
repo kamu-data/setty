@@ -2,6 +2,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// Thin wrapper around [`schemars::Schema`] for conveniece.
 #[derive(Debug, Clone, PartialEq)]
 #[repr(transparent)]
 pub struct Schema(schemars::Schema);
@@ -11,6 +12,7 @@ impl Schema {
         Self(value)
     }
 
+    /// Returns schema as a pretty-printed JSON
     pub fn to_string_pretty(&self) -> String {
         serde_json::to_string_pretty(self.0.as_value()).unwrap()
     }

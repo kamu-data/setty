@@ -1,5 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// Trait for serialization/deserialization formats used by [`crate::source::Source`]s
+/// and when writing config files.
 pub trait Format {
     type ErrorDe: std::error::Error + Send + Sync + 'static;
     type ErrorSer: std::error::Error + Send + Sync + 'static;
@@ -13,6 +15,7 @@ pub trait Format {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// JSON format using `serde_json` crate.
 #[cfg(feature = "fmt-json")]
 pub struct Json;
 
@@ -36,6 +39,7 @@ impl Format for Json {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// Same as [`Json`] but uses pretty-printing when serializing.
 #[cfg(feature = "fmt-json")]
 pub struct JsonPretty;
 
@@ -59,6 +63,7 @@ impl Format for JsonPretty {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// YAML format using `serde_yaml_ng` crate.
 #[cfg(feature = "fmt-yaml")]
 pub struct Yaml;
 
@@ -92,6 +97,7 @@ impl Format for Yaml {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// TOML format using the `toml` crate.
 #[cfg(feature = "fmt-toml")]
 pub struct Toml;
 

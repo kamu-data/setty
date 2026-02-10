@@ -1,29 +1,27 @@
 use std::{borrow::Cow, marker::PhantomData, path::PathBuf};
 
-use crate::format::Format;
-
 use crate::Value;
+use crate::errors::ReadError;
+use crate::format::Format;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// A source of configuration data.
+///
+/// Implementations return an optional `serde_json::Value` and provide a
+/// short `name()` for diagnostics.
 pub trait Source {
+    /// Human-readable source name (used in error messages and docs).
     fn name(&self) -> std::borrow::Cow<'static, str>;
 
+    /// Load the source and return `Ok(Some(value))` if present, `Ok(None)`
+    /// if the source is absent, or `Err(ReadError)` on error.
     fn load(&self) -> Result<Option<Value>, ReadError>;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, thiserror::Error)]
-#[error(transparent)]
-pub enum ReadError {
-    // TODO: Expand this to provide more error kinds
-    Serde(Box<dyn std::error::Error + Send + Sync>),
-    Io(#[from] std::io::Error),
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
+/// Allows providing [`Value`] as a [`Source`]
 impl Source for Value {
     fn name(&self) -> std::borrow::Cow<'static, str> {
         "<raw value>".into()
@@ -37,6 +35,7 @@ impl Source for Value {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// Allows passing a raw string of data as a [`Source`]
 pub struct RawData<Fmt> {
     val: String,
     _p: PhantomData<Fmt>,
@@ -79,6 +78,10 @@ where
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// File-backed [`Source`] that reads configuration from a file on disk.
+///
+/// By default `File::new(path)` is required (missing file causes an IO error).
+/// Use `required(false)` to make the file optional.
 pub struct File<Fmt> {
     path: PathBuf,
     required: bool,
@@ -136,6 +139,11 @@ where
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// Environment variable based [`Source`].
+///
+/// `Env` looks for variables starting with `prefix` and splits the remainder
+/// of the variable name by `separator` to produce nested keys in the
+/// resulting JSON object.
 pub struct Env<Fmt> {
     prefix: String,
     separator: Cow<'static, str>,

@@ -6,6 +6,29 @@ mod derive;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// Our main workhorse. Derives the attributes based on the set of enabled crate features.
+///
+/// ## Field Attributes
+/// These arguments can be specified in `#[config(...)]` field attribute:
+/// * `default` - Use `Default::default` value if field is not present
+/// * `default = $expr` - Specifies expression used to initialize the value when it's not present in config
+/// * `default_str = "$str"` - Shorthand for`default = "$str".parse().unwrap()`
+/// * `combine(keep | replace | merge)` - Allows overriding how values are combined across different config files
+///   * Possible values:
+///     * `keep` - keeps first seen value
+///     * `replace` - fully replaces with the new value
+///     * `merge` - merges object keys and concatenates arrays, merge is smart and will not merge values across different enums
+///   * Default behavior:
+///     * `replace` for all known value types
+///     * `merge` for unknown types
+///       * You will need to implement `setty::combine::Combine` for it to work for custom types
+///       * `Config` derive macro automatically implements it for you
+///       * If you don't want any merging - simply override to use `combine(replace)`
+///
+/// ## Interaction with other attributes
+/// * `#[serde(...)]` attribute will be propagated and can be used to override default behaviour (e.g. `#[serde(tag = "type")]`)
+/// * `#[schemars(...)]` attribute will be propagated
+///
 #[proc_macro_derive(Config, attributes(config, serde, schemars))]
 pub fn derive_config(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = syn::parse_macro_input!(input as syn::DeriveInput);
@@ -28,7 +51,7 @@ pub fn derive_config(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-/// Special version of `#[derive(Default)]` that recognizes `#[config(default = $expr)]` attributes
+/// Special version of built-in `#[derive(Default)]` that recognizes `#[config(default = $expr)]` attributes
 #[proc_macro_derive(Default, attributes(config, default))]
 pub fn derive_default(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = syn::parse_macro_input!(input as syn::DeriveInput);

@@ -13,6 +13,10 @@ include = { workspace = true }
 edition = { workspace = true }
 
 
+[package.metadata.docs.rs]
+all-features = true
+
+
 [features]
 default = []
 

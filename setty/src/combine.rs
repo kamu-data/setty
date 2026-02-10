@@ -2,7 +2,15 @@ use crate::Value;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// Trait describing how to merge two JSON `Value`s corresponding to a particular
+/// Rust type. It is used when combining values across multiple [`crate::source::Source`]s.
+///
+/// The implementation receives a mutable left-hand value `lhs` and a
+/// right-hand `rhs` to merge into it. The default behaviour is to
+/// replace the left value with the right one; collection-like types
+/// often provide more sophisticated merging behaviour.
 pub trait Combine {
+    /// Merge `rhs` into `lhs`.
     fn merge(lhs: &mut Value, rhs: Value) {
         // Default is `replace`
         *lhs = rhs;

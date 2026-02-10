@@ -4,13 +4,18 @@ use std::{marker::PhantomData, path::Path, rc::Rc};
 
 use crate::Value;
 use crate::combine::Combine;
-use crate::{
-    format::Format,
-    source::{ReadError, Source},
-};
+use crate::errors::{ReadError, WriteError};
+use crate::format::Format;
+use crate::source::Source;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// Builder that collects configuration `Source`s and merges them.
+///
+/// `Config<Cfg>` is generic over a target configuration type `Cfg`. When
+/// `Cfg` implements `serde::Deserialize` and `Combine`, `Config` can
+/// deserialize the merged configuration into the typed value using
+/// `extract()`.
 pub struct Config<Cfg> {
     sources: Vec<Box<dyn Source>>,
     _p: PhantomData<Cfg>,
@@ -26,15 +31,6 @@ impl<Cfg> Default for Config<Cfg> {
         }
     }
 }
-
-// impl<Cfg> Clone for Config<Cfg> {
-//     fn clone(&self) -> Self {
-//         Self {
-//             sources: self.sources.clone(),
-//             _p: PhantomData,
-//         }
-//     }
-// }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -317,15 +313,6 @@ where
             }
         }
     }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-#[derive(Debug, thiserror::Error)]
-#[error(transparent)]
-pub enum WriteError {
-    Read(#[from] ReadError),
-    Io(#[from] std::io::Error),
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

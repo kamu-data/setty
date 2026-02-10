@@ -149,10 +149,7 @@ let cfg: AppConfig = setty::Config::new()
     //   APP_CONFIG__encryption='{"algo": "Aes256Gcm", "nonce": "..."}'
     //
     // I switch to YAML for env vars to avoid excessive quotes in most cases
-    .with_source(Env::<Yaml>::new(
-        "APP_CONFIG__",
-        "__",
-    ))
+    .with_source(Env::<Yaml>::new("APP_CONFIG__", "__"))
     // Merges the values and deserializes to config type
     .extract()?;
 ```
@@ -165,12 +162,12 @@ let cfg: AppConfig = setty::Config::new()
 See the [`examples`](https://github.com/kamu-data/setty/tree/master/examples) directory.
 
 ## API
-### Proc Macros
-* `derive` - a replacement for standard `#[derive(...)]` macro that will de-duplicate derivations - this is most useful for e.g. `#[setty::derive(setty::Config, Clone)]` which allows type to implement `Clone` even when top-level feature `derive-clone` is disable, and not hit duplicate trait impl error when feature is enabled.
-
 ### Derive Macros
 * `Config` - main workhorse
 * `Default` - same as `std::Default` but recognizes defaults provided via `#[config(default = $expr)]` attributes
+
+### Proc Macros
+* `derive` - a replacement for standard `#[derive(...)]` macro that will de-duplicate derivations - this is most useful for e.g. `#[setty::derive(setty::Config, Clone)]` which allows type to implement `Clone` even when top-level feature `derive-clone` is disable, and not hit duplicate trait impl error when feature is enabled.
 
 ### Field Attributes
 These arguments can be specified in `#[config(...)]` field attribute:

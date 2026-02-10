@@ -5,6 +5,9 @@ use std::fmt::Write;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+/// Convert a [`schemars::Schema`] into a Markdown string describing types,
+/// fields and variants. This is intended for inclusion in user-facing
+/// documentation and CLI help.
 pub fn schema_to_markdown(schema: &schemars::Schema) -> String {
     use std::fmt::Write;
 
