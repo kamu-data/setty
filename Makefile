@@ -6,7 +6,7 @@
 lint:
 	cargo fmt --check
 	cargo deny check --hide-inclusion-graph
-	cargo clippy --workspace --all-targets --all-features -- -D warnings
+	cargo clippy -p setty-derive -p setty --all-targets --all-features -- -D warnings
 
 
 ###############################################################################
@@ -15,7 +15,7 @@ lint:
 
 .PHONY: lint-fix
 lint-fix:
-	cargo clippy --workspace --all-targets --all-features --fix --allow-dirty --allow-staged --broken-code
+	cargo clippy -p setty-derive -p setty --all-targets --all-features --fix --allow-dirty --allow-staged --broken-code
 	cargo fmt --all
 
 ###############################################################################

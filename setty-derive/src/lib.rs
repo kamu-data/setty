@@ -31,19 +31,20 @@ mod derive;
 ///
 #[proc_macro_derive(Config, attributes(config, serde, schemars))]
 pub fn derive_config(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = syn::parse_macro_input!(input as syn::DeriveInput);
+    match derive_config_impl(input.into()) {
+        Ok(output) => proc_macro::TokenStream::from(output),
+        Err(err) => err.to_compile_error().into(),
+    }
+}
 
-    let combine_output = match combine::combine_impl(&input) {
-        Ok(output) => output,
-        Err(err) => return err.to_compile_error().into(),
-    };
+pub(crate) fn derive_config_impl(
+    input: proc_macro2::TokenStream,
+) -> syn::Result<proc_macro2::TokenStream> {
+    let input: syn::DeriveInput = syn::parse2(input)?;
+    let combine_output = combine::combine_impl(&input)?;
+    let config_output = config::config_impl(input)?;
 
-    let config_output = match config::config_impl(input) {
-        Ok(output) => output,
-        Err(err) => return err.to_compile_error().into(),
-    };
-
-    proc_macro::TokenStream::from(quote::quote! {
+    Ok(quote::quote! {
         #config_output
         #combine_output
     })

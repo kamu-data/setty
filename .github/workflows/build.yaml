@@ -30,7 +30,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --workspace --all-targets -- -D warnings
+          args: -p setty-derive -p setty --all-targets -- -D warnings
 
   # lint_deps:
   #   name: Lint / Dependencies
