@@ -26,3 +26,4 @@ lint-fix:
 test:
 	cargo test -p setty --all-features
 	cargo run -p example-jsonschema
+	cargo run -p example-toml

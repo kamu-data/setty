@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["setty", "setty-derive", "examples/jsonschema"]
+members = ["setty", "setty-derive", "examples/jsonschema", "examples/toml"]
 default-members = ["setty", "setty-derive"]
 
 

@@ -9,3 +9,4 @@ cargo run -p example-jsonschema
 
 ## Examples
 - `example-jsonschema` - Shows generation of JSON Schema and Markdown outputs, combined with `camelCase` renaming of fields and YAML format.
+- `example-toml` - Simple TOML config example that demonstrates merging and use of `kebab-case` renaming.

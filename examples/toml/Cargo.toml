@@ -1,0 +1,32 @@
+[package]
+name = "example-toml"
+version = { workspace = true }
+edition = { workspace = true }
+publish = false
+
+
+[dependencies]
+color-eyre = { version = "0.6" }
+url = { version = "2", features = ["serde"] }
+setty = { workspace = true, features = [
+    # These traits will be derived for all types
+    "derive-clone",
+    "derive-debug",
+    "derive-partial-eq",
+    "derive-eq",
+    "derive-deserialize",
+    "derive-serialize",
+    "derive-jsonschema",
+    "derive-validate",
+    # Pick one: A case for struct fields (applies `#[serde(renameAll = "...")]`)
+    "case-fields-kebab",
+    # Pick one: A case for enum variants (applies `#[serde(renameAll = "...")]`)
+    "case-enums-kebab",
+    # Pick input format(s)
+    "fmt-toml",
+    # Pick generation target formats
+    "gen-jsonschema",
+    "gen-markdown",
+    # Extra types support
+    "types-duration-string",
+] }

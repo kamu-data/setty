@@ -1,0 +1,12 @@
+connection-timeout = "30s"
+
+[mode]
+kind = "parallel"
+concurrency = 100
+
+[[targets]]
+host = "https://foo.com"
+priority = 1
+
+[[targets]]
+host = "https://bar.com"

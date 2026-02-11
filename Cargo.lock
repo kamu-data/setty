@@ -192,6 +192,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "example-toml"
+version = "0.3.8"
+dependencies = [
+ "color-eyre",
+ "setty",
+ "url",
+]
+
+[[package]]
 name = "eyre"
 version = "0.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
