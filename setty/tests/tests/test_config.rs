@@ -123,3 +123,74 @@ fn test_config_ops() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+
+#[test]
+fn test_config_reports_deprecated() {
+    #[derive(setty::Config)]
+    struct Cfg {
+        #[deprecated = "Avoid passing secrets via config"]
+        password: Option<String>,
+
+        #[config(default)]
+        enu: Enu,
+    }
+
+    #[derive(setty::Config, setty::Default)]
+    enum Enu {
+        #[default]
+        A(A),
+    }
+
+    #[derive(setty::Config, setty::Default)]
+    struct A {
+        #[deprecated = "Works for deeply nested too"]
+        nested_password: Option<String>,
+    }
+
+    let deprecated = std::sync::Arc::new(std::sync::Mutex::new(None));
+
+    let on_deprecated = {
+        let dep = deprecated.clone();
+        move |_: &[&str], reason: Option<&str>, _since: Option<&str>| {
+            (*dep.lock().unwrap()) = reason.map(str::to_string)
+        }
+    };
+
+    setty::Config::<Cfg>::new()
+        .with_deprecation_clb(on_deprecated.clone())
+        .extract()
+        .unwrap();
+
+    assert_eq!((*deprecated.lock().unwrap()), None);
+
+    setty::Config::<Cfg>::new()
+        .with_deprecation_clb(on_deprecated.clone())
+        .with_source(serde_json::json!({"password": "swordfish"}))
+        .extract()
+        .unwrap();
+
+    assert_eq!(
+        (*deprecated.lock().unwrap()).as_deref(),
+        Some("Avoid passing secrets via config")
+    );
+    (*deprecated.lock().unwrap()) = None;
+
+    setty::Config::<Cfg>::new()
+        .with_deprecation_clb(on_deprecated)
+        .with_source(serde_json::json!({
+            "enu": {
+                "kind": "A",
+                "nested_password": "swordfish",
+            }
+        }))
+        .extract()
+        .unwrap();
+
+    assert_eq!(
+        (*deprecated.lock().unwrap()).as_deref(),
+        Some("Works for deeply nested too")
+    );
+    (*deprecated.lock().unwrap()) = None;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////

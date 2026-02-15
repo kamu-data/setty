@@ -183,8 +183,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "example-deprecation"
+version = "0.3.9"
+dependencies = [
+ "color-eyre",
+ "secrecy",
+ "setty",
+ "url",
+]
+
+[[package]]
 name = "example-env"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "color-eyre",
  "secrecy",
@@ -194,7 +204,7 @@ dependencies = [
 
 [[package]]
 name = "example-jsonschema"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "color-eyre",
  "setty",
@@ -203,7 +213,7 @@ dependencies = [
 
 [[package]]
 name = "example-toml"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "color-eyre",
  "setty",
@@ -742,7 +752,7 @@ dependencies = [
 
 [[package]]
 name = "setty"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -764,7 +774,7 @@ dependencies = [
 
 [[package]]
 name = "setty-derive"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "proc-macro2",
  "quote",

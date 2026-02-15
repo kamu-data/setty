@@ -1,0 +1,7 @@
+connection-timeout = "30s"
+
+[database]
+provider = "postgres"
+host = "example.com"
+user = "root"
+password = "root"

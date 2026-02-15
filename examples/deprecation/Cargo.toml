@@ -1,0 +1,37 @@
+[package]
+name = "example-deprecation"
+version = { workspace = true }
+edition = { workspace = true }
+publish = false
+
+
+[dependencies]
+color-eyre = { version = "0.6" }
+url = { version = "2", features = ["serde"] }
+secrecy = { version = "0.10", features = ["serde"] }
+
+# NOTE: Not deriving Eq/Serialize because of use of `SecretString`
+setty = { workspace = true, features = [
+    # These traits will be derived for all types
+    "derive-clone",
+    "derive-debug",
+    "derive-partial-eq",
+    "derive-eq",
+    "derive-deserialize",
+    "derive-serialize",
+    "derive-jsonschema",
+    "derive-validate",
+    # Pick one: A case for struct fields (applies `#[serde(renameAll = "...")]`)
+    "case-fields-kebab",
+    # Pick one: A case for enum variants (applies `#[serde(renameAll = "...")]`)
+    "case-enums-kebab",
+    # Pick input format(s)
+    "fmt-json",
+    "fmt-toml",
+    # Pick generation target formats
+    "gen-jsonschema",
+    "gen-markdown",
+    # Extra types support
+    "types-duration-string",
+    "types-secrecy",
+] }

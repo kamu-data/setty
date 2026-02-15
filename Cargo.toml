@@ -3,6 +3,7 @@ resolver = "3"
 members = [
     "setty",
     "setty-derive",
+    "examples/deprecation",
     "examples/env",
     "examples/jsonschema",
     "examples/toml",
@@ -11,7 +12,7 @@ default-members = ["setty", "setty-derive"]
 
 
 [workspace.package]
-version = "0.3.8"
+version = "0.3.9"
 edition = "2024"
 readme = "README.md"
 homepage = "https://github.com/kamu-data/setty"
@@ -60,5 +61,5 @@ multiple_crate_versions = { level = "allow", priority = 1 }
 
 
 [workspace.dependencies]
-setty = { path = "setty", version = "0.3.8" }
-setty-derive = { path = "setty-derive", version = "0.3.8" }
+setty = { path = "setty", version = "0.3.9" }
+setty-derive = { path = "setty-derive", version = "0.3.9" }

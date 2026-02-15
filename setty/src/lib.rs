@@ -2,7 +2,7 @@
 //!
 //! It can be used by:
 //! - Applications - to load and merge config from multiple sources and formats and generate documentation and JSON Schema
-//! - Libraries - to define their own config DTOs without needing to anticipate or align application-level config format and style preferences
+//! - Libraries - to define their own config DTOs without needing to fully anticipate all format and style preference that different applications may choose for their config.
 //!
 //! ## Problem Statement
 //! Popular configuration crates like `config` and `figment` deal with **reading** and **merging** values from multiple sources. They leave it up to you to handle **parsing** using `serde` derives. This is a good separation of concerns, but it leaves a lot of important details to you. Like remembering to put `#[serde(deny_unknown_fields)]` not to realize that your production config had no effect because of a small typo.
@@ -154,12 +154,13 @@
 //! ## Usage Examples
 //! See the [`examples`](https://github.com/kamu-data/setty/tree/master/examples) directory.
 
+mod check_deprecated;
 pub mod combine;
 pub mod config;
 pub mod errors;
 pub mod format;
 pub mod markdown;
-pub mod merge_with_defaults;
+mod merge_with_defaults;
 pub mod schema;
 pub mod source;
 pub mod types;

@@ -3,7 +3,7 @@
 
 It can be used by:
 - Applications - to load and merge config from multiple sources and formats and generate documentation and JSON Schema
-- Libraries - to define their own config DTOs without needing to anticipate or align application-level config format and style preferences
+- Libraries - to define their own config DTOs without needing to fully anticipate all format and style preference that different applications may choose for their config.
 
 ## Motivation
 
@@ -187,5 +187,9 @@ These arguments can be specified in `#[config(...)]` field attribute:
       * If you don't want any merging - simply override to use `combine(replace)`
 
 ### Interaction with other attributes
+* `#[deprecated(since = "..", reason = "..")]` attribute (and its other forms):
+  * Will be propagated
+  * A `"deprecation": {"since": "..", "reason": ".."}` will be added to JSON schema
+  * Deprecation callback will be called if value is present in the config during loading
 * `#[serde(...)]` attribute will be propagated and can be used to override default behaviour (e.g. `#[serde(tag = "type")]`)
 * `#[schemars(...)]` attribute will be propagated

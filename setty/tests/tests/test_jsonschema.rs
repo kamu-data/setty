@@ -4,7 +4,6 @@
 
 #[test]
 fn test_json_schema_combine_attrs() {
-    // Always derives Clone, deduplicating it with one from Config
     #[derive(setty::Config)]
     struct Cfg {
         #[config(default)]
@@ -22,21 +21,69 @@ fn test_json_schema_combine_attrs() {
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "additionalProperties": false,
             "properties": {
-                "vec_replace":  {
-                    "default":  [],
-
+                "vec_replace": {
+                    "default": [],
                     "items":  {
                         "type": "string",
                     },
                     "type": "array",
                 },
                 "vec_merge":  {
-                    "default":  [],
+                    "default": [],
                     "combine": "merge",
-                    "items":  {
+                    "items": {
                         "type": "string",
                     },
                     "type": "array",
+                },
+            },
+            "title": "Cfg",
+            "type": "object",
+        }),
+    );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#[test]
+fn test_json_schema_deprecaion() {
+    #[derive(setty::Config)]
+    struct Cfg {
+        #[deprecated = "Avoid"]
+        a: Option<String>,
+
+        #[deprecated(since = "1.1.0", note = "Don't use")]
+        b: Option<String>,
+    }
+
+    let schema = setty::Config::<Cfg>::new().json_schema();
+
+    pretty_assertions::assert_eq!(
+        *schema.as_value(),
+        serde_json::json!({
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "additionalProperties": false,
+            "properties": {
+                "a":  {
+                    "type": [
+                        "string",
+                        "null",
+                    ],
+                    "deprecated": true,
+                    "deprecation": {
+                        "reason": "Avoid",
+                    },
+                },
+                "b":  {
+                    "type": [
+                        "string",
+                        "null",
+                    ],
+                    "deprecated": true,
+                    "deprecation": {
+                        "since": "1.1.0",
+                        "reason": "Don't use",
+                    },
                 },
             },
             "title": "Cfg",

@@ -79,6 +79,22 @@ pub(crate) fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStrea
 
             for field in &mut item.fields {
                 let opts = ConfigFieldOpts::extract_from(field)?;
+                let deprecated = DeprecationOpts::parse_from(field)?;
+
+                #[cfg(feature = "derive-jsonschema")]
+                if let Some(deprecated) = deprecated {
+                    if let Some(since) = deprecated.since
+                        && let Some(reason) = deprecated.reason
+                    {
+                        field.attrs.push(syn::parse_quote! {
+                            #[schemars(extend("deprecation" = { "reason": #reason, "since": #since }))]
+                        });
+                    } else if let Some(reason) = deprecated.reason {
+                        field.attrs.push(syn::parse_quote! {
+                            #[schemars(extend("deprecation" = { "reason": #reason }))]
+                        });
+                    }
+                }
 
                 #[cfg(feature = "derive-jsonschema")]
                 if let Some(combine) = opts.combine {

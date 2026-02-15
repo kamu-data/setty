@@ -3,6 +3,7 @@
 use std::{marker::PhantomData, path::Path, rc::Rc};
 
 use crate::Value;
+use crate::check_deprecated::OnDeprecatedClb;
 use crate::combine::Combine;
 use crate::errors::{ReadError, WriteError};
 use crate::format::Format;
@@ -18,6 +19,7 @@ use crate::source::Source;
 /// `extract()`.
 pub struct Config<Cfg> {
     sources: Vec<Box<dyn Source>>,
+    deprecation_clb: Option<Box<OnDeprecatedClb>>,
     _p: PhantomData<Cfg>,
 }
 
@@ -27,6 +29,7 @@ impl<Cfg> Default for Config<Cfg> {
     fn default() -> Self {
         Self {
             sources: Vec::new(),
+            deprecation_clb: None,
             _p: PhantomData,
         }
     }
@@ -61,6 +64,7 @@ where
     }
 
     /// Deserializes the marged config into the config type
+    #[cfg(not(feature = "derive-jsonschema"))]
     pub fn extract(&self) -> Result<Cfg, ReadError> {
         let value = self.data_combined(None)?;
         serde_json::from_value(value).map_err(|e| ReadError::Serde(e.into()))
@@ -216,6 +220,32 @@ where
     Cfg: schemars::JsonSchema,
     Cfg: Combine,
 {
+    /// Provide a callback used to report use of deprecated fields.
+    /// The callback will receive full path of the property and an optional deprecation reason.
+    pub fn with_deprecation_clb(
+        mut self,
+        clb: impl Fn(&[&str], Option<&str>, Option<&str>) + 'static,
+    ) -> Self {
+        self.deprecation_clb = Some(Box::new(clb));
+        self
+    }
+
+    /// Deserializes the marged config into the config type
+    pub fn extract(&self) -> Result<Cfg, ReadError> {
+        let value = self.data_combined(None)?;
+
+        // TODO: Maybe check per every source, not after combining?
+        let clb = match self.deprecation_clb.as_deref() {
+            Some(clb) => clb,
+            None => &crate::check_deprecated::default_deprecation_clb as &OnDeprecatedClb,
+        };
+
+        let schema = self.json_schema().to_value();
+        crate::check_deprecated::check_deprecated_fields(&schema, &value, clb);
+
+        serde_json::from_value(value).map_err(|e| ReadError::Serde(e.into()))
+    }
+
     /// Returns raw merged data
     pub fn data(&self, with_defaults: bool) -> Result<Value, ReadError> {
         let mut value = self.data_combined(None)?;

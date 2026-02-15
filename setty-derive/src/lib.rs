@@ -26,6 +26,10 @@ mod derive;
 ///       * If you don't want any merging - simply override to use `combine(replace)`
 ///
 /// ## Interaction with other attributes
+/// * `#[deprecated(since = "..", reason = "..")]` attribute (and its other forms):
+///   * Will be propagated
+///   * A `"deprecation": {"since": "..", "reason": ".."}` will be added to JSON schema
+///   * Deprecation callback will be called if value is present in the config during loading
 /// * `#[serde(...)]` attribute will be propagated and can be used to override default behaviour (e.g. `#[serde(tag = "type")]`)
 /// * `#[schemars(...)]` attribute will be propagated
 ///

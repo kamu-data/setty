@@ -8,6 +8,8 @@ cargo run -p example-jsonschema
 ```
 
 ## Examples
+- `deprecation` - Shows deprecation reporting
+
 - `example-env` - Demonstrates overriding config values via env vars
   - Try running it as `MY_CFG__database__provider='"sqlite"' cargo run -p example-env`
   - Note how overriding the enum tag stops merging in values from `postgres` in config

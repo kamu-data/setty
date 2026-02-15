@@ -134,6 +134,62 @@ impl ConfigFieldOpts {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+pub(crate) struct DeprecationOpts {
+    pub reason: Option<syn::Expr>,
+    pub since: Option<syn::Expr>,
+}
+
+impl DeprecationOpts {
+    fn new() -> Self {
+        Self {
+            reason: None,
+            since: None,
+        }
+    }
+
+    pub fn parse_from(field: &syn::Field) -> syn::Result<Option<Self>> {
+        for attr in field.attrs.iter() {
+            if attr.path().is_ident("deprecated") {
+                return Ok(Some(Self::parse(attr)?));
+            }
+        }
+
+        Ok(None)
+    }
+
+    fn parse(attr: &syn::Attribute) -> syn::Result<Self> {
+        match &attr.meta {
+            syn::Meta::Path(_) => Ok(Self::new()),
+            syn::Meta::NameValue(val) => Ok(Self {
+                reason: Some(val.value.clone()),
+                since: None,
+            }),
+            syn::Meta::List(val) => {
+                let nested = attr.parse_args_with(
+                    syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated,
+                )?;
+
+                let mut since = None;
+                let mut reason = None;
+
+                for meta in nested {
+                    if let syn::Meta::NameValue(val) = meta {
+                        if val.path.is_ident("since") {
+                            since = Some(val.value.clone());
+                        } else if val.path.is_ident("note") {
+                            reason = Some(val.value.clone());
+                        }
+                    }
+                }
+
+                Ok(Self { reason, since })
+            }
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
 pub(crate) struct SerdeTypeOpts {
     pub tag: Option<String>,
     pub span: Span,
