@@ -3,11 +3,15 @@
 use std::{marker::PhantomData, path::Path, rc::Rc};
 
 use crate::Value;
-use crate::check_deprecated::OnDeprecatedClb;
 use crate::combine::Combine;
 use crate::errors::{ReadError, WriteError};
 use crate::format::Format;
 use crate::source::Source;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+pub type OnDeprecatedClb =
+    dyn Fn(&[&str], /* reason */ Option<&str>, /* since */ Option<&str>) + 'static;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
