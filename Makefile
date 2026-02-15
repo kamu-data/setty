@@ -28,3 +28,4 @@ test:
 	cargo run -p example-deprecation
 	cargo run -p example-jsonschema
 	cargo run -p example-toml
+	cargo run -p example-validate

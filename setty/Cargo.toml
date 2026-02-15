@@ -31,7 +31,7 @@ derive-jsonschema = [
     "dep:schemars",
     "schemars/derive",
 ]
-derive-validate = ["setty-derive/derive-validate"]
+derive-validate = ["setty-derive/derive-validate", "dep:validator"]
 
 case-fields-lower = ["setty-derive/case-fields-lower"]
 case-fields-pascal = ["setty-derive/case-fields-pascal"]
@@ -99,6 +99,9 @@ toml = { optional = true, version = "0.9", default-features = false, features = 
 ] }
 url = { optional = true, version = "2", default-features = false, features = [
     "std",
+] }
+validator = { optional = true, version = "0.20", default-features = false, features = [
+    "derive",
 ] }
 
 

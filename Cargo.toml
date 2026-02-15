@@ -7,6 +7,7 @@ members = [
     "examples/env",
     "examples/jsonschema",
     "examples/toml",
+    "examples/validate",
 ]
 default-members = ["setty", "setty-derive"]
 

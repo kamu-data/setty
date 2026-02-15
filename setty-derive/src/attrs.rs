@@ -44,6 +44,7 @@ impl syn::parse::Parse for Combine {
 pub(crate) struct ConfigFieldOpts {
     pub default: Option<Option<syn::Expr>>,
     pub combine: Option<Combine>,
+    pub validate: Option<proc_macro2::TokenStream>,
     pub span: Span,
 }
 
@@ -52,6 +53,7 @@ impl ConfigFieldOpts {
         Self {
             default: None,
             combine: None,
+            validate: None,
             span,
         }
     }
@@ -59,6 +61,7 @@ impl ConfigFieldOpts {
     pub fn merge(&mut self, other: Self) -> syn::Result<()> {
         self.default = other.default;
         self.combine = other.combine;
+        self.validate = other.validate;
         self.span = other.span;
         Ok(())
     }
@@ -119,6 +122,11 @@ impl ConfigFieldOpts {
                 syn::parenthesized!(content in meta.input);
                 let combine: Combine = content.parse()?;
                 opts.combine = Some(combine);
+            } else if meta.path.is_ident("validate") {
+                // Capture validate(...) token stream for later processing
+                let content;
+                syn::parenthesized!(content in meta.input);
+                opts.validate = Some(content.parse()?);
             } else {
                 return Err(syn::Error::new(
                     meta.path.span(),

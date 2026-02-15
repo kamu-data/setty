@@ -7,6 +7,10 @@ allow-wildcard-paths = true
 
 deny = []
 
+skip-tree = [
+    { name = "darling" }, # TODO: validator crate must upgrade
+]
+
 [licenses]
 allow = ["Apache-2.0", "MIT", "Unicode-3.0"]
 private = { ignore = true }

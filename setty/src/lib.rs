@@ -219,4 +219,7 @@ pub mod __internal {
 
     #[cfg(feature = "derive-serialize")]
     pub use serde_with;
+
+    #[cfg(feature = "derive-validate")]
+    pub use validator;
 }

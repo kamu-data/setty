@@ -7,6 +7,11 @@ pub enum ReadError {
     // TODO: Expand this to provide more error kinds
     /// Boxed deserialization error
     Serde(Box<dyn std::error::Error + Send + Sync>),
+
+    /// Failed validation
+    #[cfg(feature = "derive-validate")]
+    Validation(#[from] validator::ValidationErrors),
+
     /// IO error when reading from disk
     Io(#[from] std::io::Error),
 }

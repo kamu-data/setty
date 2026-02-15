@@ -71,6 +71,18 @@ pub(crate) fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStrea
 
     match &mut input.data {
         syn::Data::Struct(item) => {
+            // Add Validate derive only for structs (enums are not supported by validator crate)
+            #[cfg(feature = "derive-validate")]
+            {
+                add_derive(
+                    &mut input.attrs,
+                    syn::parse_quote!(::setty::__internal::validator::Validate),
+                );
+                input.attrs.push(syn::parse_quote! {
+                    #[validate(crate = "::setty::__internal::validator")]
+                });
+            }
+
             if let Some(case) = fields_case() {
                 input.attrs.push(syn::parse_quote! {
                     #[serde(rename_all = #case)]
@@ -127,6 +139,14 @@ pub(crate) fn config_impl(mut input: syn::DeriveInput) -> syn::Result<TokenStrea
 
                     #[cfg(feature = "derive-deserialize")]
                     field.attrs.push(new_default_attr);
+                }
+
+                // Add validation attribute if provided and feature is enabled
+                #[cfg(feature = "derive-validate")]
+                if let Some(validate) = opts.validate {
+                    field.attrs.push(syn::parse_quote! {
+                        #[validate(#validate)]
+                    });
                 }
             }
         }

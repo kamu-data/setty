@@ -8,14 +8,16 @@ cargo run -p example-jsonschema
 ```
 
 ## Examples
-- `deprecation` - Shows deprecation reporting
+- [`deprecation`](./deprecation/) - Shows deprecation reporting
 
-- `example-env` - Demonstrates overriding config values via env vars
+- [`example-env`](./env/) - Demonstrates overriding config values via env vars
   - Try running it as `MY_CFG__database__provider='"sqlite"' cargo run -p example-env`
   - Note how overriding the enum tag stops merging in values from `postgres` in config
   - Note the use of `SecretString` for password
 
-- `example-jsonschema` - Shows generation of JSON Schema and Markdown outputs, combined with `camelCase` renaming of fields and YAML format
+- [`example-jsonschema`](./jsonschema/) - Shows generation of JSON Schema and Markdown outputs, combined with `camelCase` renaming of fields and YAML format
   - Notice the generated `config-schema.json` and `config-readme.md` files
 
-- `example-toml` - Simple TOML config example that demonstrates merging and use of `kebab-case` renaming
+- [`example-toml`](./toml/) - Simple TOML config example that demonstrates merging and use of `kebab-case` renaming
+
+- [`example-validate`](./validate/) - Showcase for using `derive-validate` feature for rich validation

@@ -18,9 +18,9 @@ setty = { workspace = true, features = [
     "derive-partial-eq",
     "derive-eq",
     "derive-deserialize",
-    "derive-serialize",
+    # "derive-serialize",
     "derive-jsonschema",
-    "derive-validate",
+    # "derive-validate",
     # Pick one: A case for struct fields (applies `#[serde(renameAll = "...")]`)
     "case-fields-kebab",
     # Pick one: A case for enum variants (applies `#[serde(renameAll = "...")]`)

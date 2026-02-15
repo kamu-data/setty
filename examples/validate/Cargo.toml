@@ -1,5 +1,5 @@
 [package]
-name = "example-toml"
+name = "example-validate"
 version = { workspace = true }
 edition = { workspace = true }
 publish = false
@@ -7,7 +7,7 @@ publish = false
 
 [dependencies]
 color-eyre = { version = "0.6" }
-url = { version = "2", features = ["serde"] }
+serde_json = { version = "1" }
 setty = { workspace = true, features = [
     # These traits will be derived for all types
     "derive-clone",
@@ -15,18 +15,20 @@ setty = { workspace = true, features = [
     "derive-partial-eq",
     "derive-eq",
     "derive-deserialize",
-    # "derive-serialize",
+    "derive-serialize",
     # "derive-jsonschema",
-    # "derive-validate",
+    "derive-validate",
     # Pick one: A case for struct fields (applies `#[serde(renameAll = "...")]`)
-    "case-fields-kebab",
+    "case-fields-snake",
     # Pick one: A case for enum variants (applies `#[serde(renameAll = "...")]`)
-    "case-enums-kebab",
+    "case-enums-pascal",
+    "case-enums-any",
     # Pick input format(s)
-    "fmt-toml",
+    "fmt-yaml",
     # Pick generation target formats
     "gen-jsonschema",
     "gen-markdown",
     # Extra types support
     "types-duration-string",
+    "types-url",
 ] }

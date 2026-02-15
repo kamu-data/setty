@@ -218,11 +218,10 @@ where
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #[cfg(feature = "derive-jsonschema")]
-impl<Cfg> Config<Cfg>
-where
-    Cfg: serde::de::DeserializeOwned,
-    Cfg: schemars::JsonSchema,
-    Cfg: Combine,
+impl<
+    #[cfg(not(feature = "derive-validate"))] Cfg: serde::de::DeserializeOwned + schemars::JsonSchema + Combine,
+    #[cfg(feature = "derive-validate")] Cfg: serde::de::DeserializeOwned + schemars::JsonSchema + Combine + validator::Validate,
+> Config<Cfg>
 {
     /// Provide a callback used to report use of deprecated fields.
     /// The callback will receive full path of the property and an optional deprecation reason.
@@ -234,7 +233,7 @@ where
         self
     }
 
-    /// Deserializes the marged config into the config type
+    /// Deserializes the marged config into the config type and performs deprecation checks and validation.
     pub fn extract(&self) -> Result<Cfg, ReadError> {
         let value = self.data_combined(None)?;
 
@@ -247,7 +246,12 @@ where
         let schema = self.json_schema().to_value();
         crate::check_deprecated::check_deprecated_fields(&schema, &value, clb);
 
-        serde_json::from_value(value).map_err(|e| ReadError::Serde(e.into()))
+        let cfg = serde_json::from_value(value).map_err(|e| ReadError::Serde(e.into()))?;
+
+        #[cfg(feature = "derive-validate")]
+        validator::Validate::validate(&cfg)?;
+
+        Ok(cfg)
     }
 
     /// Returns raw merged data
