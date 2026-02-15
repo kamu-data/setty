@@ -61,7 +61,7 @@ types-secrecy = ["dep:secrecy"]
 types-url = ["schemars/url2", "dep:url"]
 
 gen-jsonschema = ["derive-jsonschema"]
-gen-markdown = ["derive-jsonschema"]
+gen-markdown = ["derive-jsonschema", "dep:html-escape"]
 
 
 [dependencies]
@@ -85,6 +85,7 @@ chrono = { optional = true, version = "0.4", default-features = false, features 
 duration-string = { optional = true, version = "0.5", default-features = false, features = [
     "serde",
 ] }
+html-escape = { optional = true, version = "0.2", default-features = false }
 schemars = { optional = true, version = "1", default-features = false }
 secrecy = { optional = true, version = "0.10", default-features = false }
 serde_with = { optional = true, version = "3", default-features = false, features = [

@@ -12,8 +12,8 @@ And by **libraries** to define **reusable** config types without needing to anti
 ## Motivation
 Popular configuration crates like `config` and `figment` deal with **reading** and **merging** values from multiple sources. They leave it up to you to handle **parsing** using `serde` derives.
 
-This is a good separation of concerns, but it leaves a lot of important details to you:
-- Like remembering to put `#[serde(deny_unknown_fields)]` so a small typo in your production config had no effect because of a small typo
+This is a good separation of concerns, but it leaves a lot of important details to you, like:
+- Remembering to put `#[serde(deny_unknown_fields)]` so that a typo in your production config would not go unnoticed
 - Keeping in mind the non-trivial interplay between `#[derive(Default)]`, `Option<T>` fileds, and `#[serde(default = "..")]`
 
 You may also need features beyond parsing:
@@ -21,7 +21,8 @@ You may also need features beyond parsing:
 - JSONSchema generation *(e.g. for Helm chart values validation)*
 - Auto-completion in CLI
 - Deprecation mechanism
-- Per-field combine strategies *(e.g. keep first value, replace with latest, merge arrays)*
+- Extended validation
+- Per-field combine strategies etc.
 
 Layering libraries and macros makes your models **very verbose**:
 
@@ -32,7 +33,7 @@ Layering libraries and macros makes your models **very verbose**:
     PartialEq, Eq,
     better_default::Default,
     serde::Deserialize, serde::Serialize,
-    serde_valid::Validate,
+    validator::Validate,
     schemars::JsonSchema,
 )]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
@@ -179,7 +180,7 @@ See the [`examples`](https://github.com/kamu-data/setty/tree/master/examples) di
 - `Default` - same as `std::Default` but recognizes defaults provided via `#[config(default = $expr)]` attributes
 
 ### Proc Macros
-- `derive` - a replacement for standard `#[derive(...)]` macro that will de-duplicate derivations - this is most useful for e.g. `#[setty::derive(setty::Config, Clone)]` which allows type to implement `Clone` even when top-level feature `derive-clone` is disable, and not hit duplicate trait impl error when feature is enabled.
+- `derive` - a replacement for standard `#[derive(...)]` macro that will de-duplicate derivations - this is most useful for e.g. `#[setty::derive(setty::Config, Clone)]` which allows type to implement `Clone` even when top-level feature `derive-clone` is disabled, and not hit `duplicate trait impl` error when feature is enabled.
 
 ### Field Attributes
 These arguments can be specified in `#[config(...)]` field attribute:
