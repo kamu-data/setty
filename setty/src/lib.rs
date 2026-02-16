@@ -31,7 +31,7 @@
 //!     PartialEq, Eq,
 //!     better_default::Default,
 //!     serde::Deserialize, serde::Serialize,
-//!     serde_valid::Validate,
+//!     validator::Validate,
 //!     schemars::JsonSchema,
 //! )]
 //! #[serde(deny_unknown_fields, rename_all = "camelCase")]
@@ -88,7 +88,7 @@
 //!
 //!     /// Or specify default values in-line (with full expressions)
 //!     #[config(default = "localhost")]
-//!     /// Basic validation can be delegated to `serde_valid` crate
+//!     /// Basic validation can be delegated to `validator` crate
 //!     #[config(validate(min_length = 5))]
 //!     hostname: String,
 //!
