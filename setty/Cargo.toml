@@ -108,5 +108,7 @@ validator = { optional = true, version = "0.20", default-features = false, featu
 
 [dev-dependencies]
 indoc = "2"
-tempfile = { version = "3" }
-pretty_assertions = { version = "1" }
+tempfile = { version = "3", default-features = false }
+pretty_assertions = { version = "1", default-features = false, features = [
+    "std",
+] }
