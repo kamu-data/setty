@@ -1,5 +1,8 @@
 {
   "$defs": {
+    "ByteSize": {
+      "type": "string"
+    },
     "DurationString": {
       "type": "string"
     },
@@ -46,6 +49,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "cacheSize": {
+      "$ref": "#/$defs/ByteSize",
+      "default": "10.0 MiB",
+      "description": "Cache size"
+    },
     "connectionTimeout": {
       "$ref": "#/$defs/DurationString",
       "default": "15s",

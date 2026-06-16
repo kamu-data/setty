@@ -29,6 +29,7 @@ setty = { workspace = true, features = [
     "gen-jsonschema",
     "gen-markdown",
     # Extra types support
+    "types-bytesize",
     "types-duration-string",
     "types-url",
 ] }

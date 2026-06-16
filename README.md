@@ -138,6 +138,7 @@ setty = { version = "*", features = [
     "gen-markdown",
     # Extra types support
     "types-bigdecimal",
+    "types-bytesize",
     "types-chrono",
     "types-duration-string",
     "types-url",

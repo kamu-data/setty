@@ -5,6 +5,10 @@ use setty::source::File;
 
 #[derive(setty::Config, setty::Default)]
 struct Cfg {
+    /// Cache size
+    #[config(default_str = "10MiB")]
+    cache_size: setty::types::ByteSize,
+
     /// Connection timeout
     #[config(default_str = "15s")]
     connection_timeout: setty::types::DurationString,

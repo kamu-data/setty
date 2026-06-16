@@ -9,6 +9,7 @@ deny = []
 
 skip-tree = [
     { name = "darling" }, # TODO: validator crate must upgrade
+    { name = "winnow" },  # TODO: toml crate must upgrade
 ]
 
 [licenses]
@@ -23,4 +24,10 @@ unknown-registry = "deny"
 
 [advisories]
 yanked = "deny"
-ignore = []
+unused-ignored-advisory = "deny"
+
+ignore = [
+    # proc-macro-error2 (unmaintained)
+    # https://rustsec.org/advisories/RUSTSEC-2026-0173
+    "RUSTSEC-2026-0173",
+]

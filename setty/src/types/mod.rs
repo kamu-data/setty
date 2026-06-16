@@ -1,8 +1,12 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
+pub mod bytesize;
 pub mod duration_string;
 pub mod rfc3339;
 pub mod url_or_path;
+
+#[cfg(feature = "types-bytesize")]
+pub use bytesize::*;
 
 #[cfg(feature = "types-duration-string")]
 pub use duration_string::*;

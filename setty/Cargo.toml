@@ -55,6 +55,7 @@ fmt-yaml = ["dep:serde_yaml"]
 fmt-yaml-arbitrary-precision-hack = []
 
 types-bigdecimal = ["schemars/bigdecimal04", "dep:bigdecimal"]
+types-bytesize = ["dep:bytesize"]
 types-chrono = ["schemars/chrono04", "dep:chrono"]
 types-duration-string = ["dep:duration-string"]
 types-secrecy = ["dep:secrecy"]
@@ -78,6 +79,10 @@ serde_json = { version = "1", default-features = false, features = [
 thiserror = { version = "2", default-features = false }
 
 # Optional
+bytesize = { optional = true, version = "2", default-features = false, features = [
+    "std",
+    "serde",
+] }
 bigdecimal = { optional = true, version = "0.4", default-features = false }
 chrono = { optional = true, version = "0.4", default-features = false, features = [
     "alloc",

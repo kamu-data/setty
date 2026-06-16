@@ -4,6 +4,12 @@
 <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
 <tbody>
 <tr>
+<td><code>cacheSize</code></td>
+<td><a href="#bytesize"><code>ByteSize</code></a></td>
+<td><code class="language-json">&quot;10.0 MiB&quot;</code></td>
+<td>Cache size</td>
+</tr>
+<tr>
 <td><code>connectionTimeout</code></td>
 <td><a href="#durationstring"><code>DurationString</code></a></td>
 <td><code class="language-json">&quot;15s&quot;</code></td>
@@ -25,6 +31,10 @@
 </tr>
 </tbody>
 </table>
+
+## `ByteSize`
+
+Base type: `string`
 
 ## `DurationString`
 

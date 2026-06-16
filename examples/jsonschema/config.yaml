@@ -1,3 +1,4 @@
+cacheSize: 100MiB
 connectionTimeout: 30s
 hosts:
   - https://foo.com
